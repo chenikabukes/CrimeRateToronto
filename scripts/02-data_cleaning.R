@@ -1,44 +1,59 @@
 #### Preamble ####
-# Purpose: Cleans the raw plane data recorded by two observers..... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 6 April 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
+# Purpose: Cleans the raw housing data 
+# Author: Chenika Bukes 
+# Date: 20 September 2024 
+# Contact: chenika.bukes@mail.utoronto.ca 
 # License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Pre-requisites: 
+#   - Installed the `tidyverse` and `janitor` R packages
+#   - Raw housing and crime data files saved as CSV or Excel
+# Any other information needed? 
+# This script processes and cleans both housing price and crime rate data for further analysis.
 
 #### Workspace setup ####
 library(tidyverse)
+library(janitor)
+library(readxl)
 
 #### Clean data ####
-raw_data <- read_csv("inputs/data/plane_data.csv")
+# Read the third worksheet of the Excel file, which contains the housing data
+raw_data_housing <- read_excel("./data/raw_data/wellbeing-toronto-housing.xlsx", sheet = 3)
 
-cleaned_data <-
-  raw_data |>
-  janitor::clean_names() |>
-  select(wing_width_mm, wing_length_mm, flying_time_sec_first_timer) |>
-  filter(wing_width_mm != "caw") |>
+# Cleaning steps:
+housing_cleaned_data <- 
+  raw_data_housing |> 
+  janitor::clean_names() |> # Clean column names (makes them lower_snake_case)
+  select(neighbourhood, neighbourhood_id, home_prices) |> # Select relevant columns
   mutate(
-    flying_time_sec_first_timer = if_else(flying_time_sec_first_timer == "1,35",
-                                   "1.35",
-                                   flying_time_sec_first_timer)
-  ) |>
-  mutate(wing_width_mm = if_else(wing_width_mm == "490",
-                                 "49",
-                                 wing_width_mm)) |>
-  mutate(wing_width_mm = if_else(wing_width_mm == "6",
-                                 "60",
-                                 wing_width_mm)) |>
-  mutate(
-    wing_width_mm = as.numeric(wing_width_mm),
-    wing_length_mm = as.numeric(wing_length_mm),
-    flying_time_sec_first_timer = as.numeric(flying_time_sec_first_timer)
-  ) |>
-  rename(flying_time = flying_time_sec_first_timer,
-         width = wing_width_mm,
-         length = wing_length_mm
-         ) |> 
-  tidyr::drop_na()
+    # Clean and convert "home_prices" to numeric if needed
+    home_prices = as.numeric(gsub(",", "", home_prices)) # Remove commas and convert to numeric
+  ) |> 
+  # If any neighborhood has invalid/missing home price, remove the row
+  drop_na(home_prices) |> 
+  filter(home_prices > 0) |>  
+  rename(
+    neighbourhood_name = neighbourhood, 
+    neighbourhood_code = neighbourhood_id,
+    price = home_prices
+  )
 
-#### Save data ####
-write_csv(cleaned_data, "outputs/data/analysis_data.csv")
+#### Save cleaned housing data ####
+write_csv(housing_cleaned_data, "./data/clean_data/housing_cleaned_data.csv")
+
+#### Clean crime statistics data ####
+# Read the crime data CSV
+raw_data_crime <- read_csv("./data/raw_data/crime_raw_data.csv")
+
+# Cleaning steps for crime data:
+crime_cleaned_data <- raw_data_crime %>%
+  janitor::clean_names() %>%
+  # Select columns of neighborhood id and columns relevant to different crime rates
+  select("hood_id", starts_with("assault_rate"), starts_with("autotheft_rate"),
+         starts_with("biketheft_rate"), starts_with("breakenter_rate"),
+         starts_with("homicide_rate"), starts_with("robbery_rate"),
+         starts_with("shooting_rate"), starts_with("theftfrommv_rate"),
+         starts_with("theftover_rate")) 
+
+#### Save cleaned crime data ####
+write_csv(crime_cleaned_data, "./data/clean_data/crime_cleaned_data.csv")
+
