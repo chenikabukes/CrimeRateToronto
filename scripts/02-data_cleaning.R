@@ -47,12 +47,22 @@ raw_data_crime <- read_csv("./data/raw_data/crime_raw_data.csv")
 # Cleaning steps for crime data:
 crime_cleaned_data <- raw_data_crime %>%
   janitor::clean_names() %>%
-  # Select columns of neighborhood id and columns relevant to different crime rates
+  # Select neighborhood ID and crime rate columns
   select("hood_id", starts_with("assault_rate"), starts_with("autotheft_rate"),
          starts_with("biketheft_rate"), starts_with("breakenter_rate"),
          starts_with("homicide_rate"), starts_with("robbery_rate"),
          starts_with("shooting_rate"), starts_with("theftfrommv_rate"),
-         starts_with("theftover_rate")) 
+         starts_with("theftover_rate")) %>%
+  # Pivot to long format to extract year and crime type
+  pivot_longer(
+    cols = -hood_id,  # Keep neighborhood ID intact
+    names_to = "crime_year",  # Combine crime type and year
+    values_to = "rate"        # Values are the crime rates
+  ) %>%
+  # Separate the 'crime_year' column into 'crime' and 'year'
+  separate(crime_year, into = c("crime", "year"), sep = "_rate_") %>%
+  # Convert year to numeric 
+  mutate(year = as.numeric(year))
 
 #### Save cleaned crime data ####
 write_csv(crime_cleaned_data, "./data/clean_data/crime_cleaned_data.csv")

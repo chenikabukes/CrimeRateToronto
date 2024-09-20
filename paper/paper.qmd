@@ -3,46 +3,49 @@ title: "Analysis of Crime Statistics from 2014 to 2023 in Neighborhoods of Varyi
 subtitle: "A Statistical Basis for Policy Improvement"
 author: Chenika Bukes
 thanks: "Code and data are available at: https://github.com/chenikabukes/TorontoDataset"
-date: 24/09/2024
+date: 24 September 2024
 date-format: long
-abstract: "The abstract answers: 1) what was done, 2) what was found, and 3) why this matters (all at a high level). Likely four sentences. Abstract must make clear what we learn about the world because of this paper."
-format: pdf
+format: 
+  pdf:
+    toc: true    
+    toc-depth: 3 
+    number-sections: true  
+    toc-title: "Table of Contents" 
+abstract: "This study analyzes crime rates across Toronto's neighborhoods from 2014 to 2023, focusing on the 10 neighborhoods with the highest home prices and the 10 neighborhoods with the lowest home prices. We investigated crime trends across nine categories, including assault, robbery, and autotheft, comparing the average crime rates between high-price and low-price neighborhoods. The analysis reveals a significant disparity in crime rates, with lower-priced neighborhoods consistently exhibiting higher crime rates, especially in violent crimes such as shootings and robberies. These findings underscore the importance of targeted crime prevention strategies in economically disadvantaged neighborhoods and suggest that housing affordability is closely linked to public safety concerns."
 number-sections: true
 bibliography: references.bib
+
 ---
 
 ```{r}
 #| include: false
-#| warning: false
 #| message: false
+#| warning: false
+#| error: false
 
 library("tidyverse")
 library("gt")
-
+library("scales")
 ```
 
 
 # Introduction
 
-Housing prices and crime rates are often perceived as indicators of the socio-economic environment of a city’s neighborhoods. Higher home prices are typically associated with safer, more affluent areas, while lower home prices may correlate with higher crime rates and other social challenges. However, these relationships are not always straightforward and may vary across different regions and time periods.
+We run the model in R [@citeR]. Understanding the relationship between housing prices and crime rates is critical for urban planning and public policy. Housing prices are often considered a key indicator of socio-economic status, with higher-priced neighborhoods typically associated with lower crime rates, greater economic stability, and improved social services. Conversely, lower-priced neighborhoods are often linked to higher crime rates, economic challenges, and reduced access to resources. However, while these patterns may hold in many cases, the relationship between housing prices and crime rates is complex and not universally consistent across all regions. This complexity raises the need for more detailed investigation into how these factors interact in specific urban settings, such as Toronto.
 
-This report aims to investigate the relationship between housing prices and crime rates in various neighborhoods of Toronto from 2014 to 2023. By focusing on the 10 neighborhoods with the highest home prices and the 10 neighborhoods with the lowest home prices, this analysis seeks to identify any significant patterns or correlations between housing prices and crime rates over time.
+Despite numerous studies exploring socio-economic indicators and crime, there remains a gap in understanding how housing prices, particularly in high- and low-income neighborhoods, correlate with different types of crimes over time. Previous research often treats these neighborhoods as static entities, overlooking the dynamic nature of crime trends and their fluctuations over time. This paper aims to fill this gap by analyzing the crime rates across Toronto’s neighborhoods from 2014 to 2023, specifically focusing on the 10 neighborhoods with the highest and the 10 neighborhoods with the lowest home prices.
 
-Through statistical analysis and visualizations, we aim to answer the following key questions:
+In this analysis, we examined nine distinct crime categories—including assault, robbery, and autotheft—and compared the trends in both high- and low-priced neighborhoods. The goal was to identify significant patterns in crime rates, understand whether wealthier neighborhoods consistently experience lower crime rates, and investigate which types of crimes are most prevalent in different socio-economic contexts. Our findings reveal notable disparities, particularly in violent crimes such as shootings and robberies, which were found to be more prevalent in lower-income neighborhoods.
 
-How have crime rates changed in Toronto’s neighborhoods over the last decade?
-Are neighborhoods with higher home prices experiencing lower crime rates, or is the relationship more complex?
-What types of crimes are most prevalent in high-price vs. low-price neighborhoods?
-The findings from this analysis will provide insights into the socio-economic dynamics of Toronto's neighborhoods and serve as a basis for city planners and policymakers in addressing crime prevention strategies.
-
+These findings are important because they offer insights that can help city planners and policymakers design targeted crime prevention strategies. By understanding how crime rates differ across neighborhoods with varying economic conditions, more effective resource allocation and policy interventions can be implemented. The structure of this paper is as follows: first, we review the existing literature on the relationship between housing prices and crime. Second, we present our methodology and data sources. Third, we provide a detailed analysis of the results, followed by a discussion of the implications for public policy and future research.
 
 # Data {#sec-data}
-# Raw Data {#sub-section}
-The data for this analysis comes from two key sources within Toronto's Open Data portal:
+##  Raw Data {#sub-section}
+The data for this analysis comes from two primary sources obtained from Toronto’s Open Data portal:
 
-**Housing Price Data**: This dataset contains home prices for various neighborhoods in Toronto. The data includes details such as neighborhood name, neighborhood ID, and the average home price for each area. The housing data is extracted from the “Wellbeing Toronto” dataset, which provides information on home prices in Toronto’s neighborhoods. The raw dataset contains multiple columns representing various housing and socio-economic indicators. For the purpose of this analysis, the column of interest is the average home price for each neighborhood, which has been cleaned and filtered for further analysis.
+**Housing Price Data**: This dataset includes information on average home prices across various neighborhoods in Toronto. It serves as an indicator of the socio-economic status of each neighborhood. The data is extracted from the "Wellbeing Toronto" dataset, which records various socio-economic variables across the city. For this analysis, the focus is on the average home price for each neighborhood, identified by the neighborhood name and ID. This variable acts as a proxy for socio-economic conditions, with higher home prices suggesting wealthier neighborhoods, and lower prices implying economically disadvantaged areas.
 
-**Crime Statistics Data**: This dataset provides crime statistics for each neighborhood, with detailed rates for various types of crimes, including:
+**Crime Statistics Data**: This dataset contains detailed annual crime statistics for each neighborhood between 2014 and 2023. It includes crime rates per 100,000 residents for a range of criminal activities:
   - Assault
   - Auto theft
   - Bike theft
@@ -52,40 +55,69 @@ The data for this analysis comes from two key sources within Toronto's Open Data
   - Shooting
   - Theft from motor vehicle
   - Theft over $5,000
-The crime data spans from 2014 to 2023 and includes crime rates for each of these categories on an annual basis. The crime rates are reported per 100,000 residents, allowing for comparisons across neighborhoods with different population sizes.
+The crime data provides a robust view of criminal activity across various categories, offering insight into both violent and non-violent crime trends in different neighborhoods.
 
+**Data Selection Reasoning**
+While Toronto’s census data also contains valuable socio-economic information, the housing price dataset was chosen because it was updated more frequently and provides clearer spatial links between neighborhoods and socio-economic status. The census data, recorded in 2015 and 2021, presented two key limitations for this analysis: (1) It was not yet fully updated to 2021 data, and (2) the census dataset organizes data by individual household income rather than neighborhood-level data, making it more challenging to compare neighborhoods directly. The housing price data, already grouped by neighborhood code, was easier to integrate with the crime statistics for this study's purpose.
 
-**Data Cleaning and Preparation**
-To prepare the data for analysis, the following steps were taken:
+**Variables and their Roles**
+The key variables under examination are:
+  - Neighborhood Name and ID: Each neighborhood is identified by both a name and a unique ID code.
+  - Home Prices: Average home prices (in CAD) across neighborhoods, reflecting the relative affluence of each area.
+  - Crime Rates: Crime statistics for nine different crime categories (listed above), measured as the number of incidents per 100,000 residents annually. These crime rates provide a normalized metric for comparing areas with different population sizes.
+These variables allow for a detailed analysis of the relationship between socio-economic status (as proxied by home prices) and crime rates, both across crime categories and over time.
 
-  - Housing Data: The home price data was cleaned by removing any invalid or missing entries, converting home prices to numeric values, and filtering out zero or negative prices. The final dataset consists of neighborhoods and their corresponding home prices.
-
-  - Crime Data: The crime data was cleaned by filtering out any missing or anomalous entries. The crime rates for each neighborhood were then aggregated by year and by crime type to allow for time-series analysis and comparisons across neighborhoods.
+## Data Cleaning and Preparation
+The housing data was prepared by filtering out invalid entries and ensuring that all price data was numeric. Only neighborhoods with valid, positive home price values were included. The crime data was cleaned by removing any missing entries and focusing exclusively on the crime rates. Non-relevant columns (i.e., raw crime counts) were removed in favor of normalized rates per 100,000 residents, making comparisons across neighborhoods more meaningful.
 
 **Focus Neighborhoods**
-The neighborhoods with the 10 highest and 10 lowest home prices were selected for focused analysis. These neighborhoods represent a broad spectrum of socio-economic conditions and are expected to exhibit varying crime patterns.
+To investigate the potential relationship between socio-economic status and crime, the analysis focuses on the neighborhoods with the 10 highest and the 10 lowest average home prices. These neighborhoods represent a wide socio-economic spectrum and are expected to exhibit varying patterns of criminal activity. By isolating these groups, we can assess whether wealthier neighborhoods experience lower crime rates and determine which types of crimes are more prevalent in less affluent areas.
 
-
-Explain if there were similar datasets that could have been used and why they were not. If variables were constructed then this should be mentioned, and high-level cleaning aspects of note should be mentioned, but this section should focus on the destination, not the journey. It is important to understand what the variables look like by including graphs, and possibly tables, of all observations, along with discussion of those graphs and the other features of these data. Summary statistics should also be included, and well as any relationships between the variables. If this becomes too detailed, then appendices could be used.
-
-Below is an overview of the housing dataset, presented in Table 1, and visualizations that illustrate key trends in the data.
+## Summary Statistics and Visualisation 
+Below, we provide an overview of the housing price data for the top 10 highest and bottom 10 lowest-priced neighborhoods, followed by visualizations that illustrate trends in crime rates across Toronto from 2014 to 2023.
 
 ```{r}
+#| fig-pos: "H"
+#| message: false
+#| warning: false
+#| error: false
 #| label: tbl-housing-summary
 #| tbl-cap: "Table 1: Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)"
 #| echo: false
 
 # Read in the housing data
-housing_cleaned_data <- read_csv("../data/clean_data/housing_cleaned_data.csv")
+housing_cleaned_data <- read_csv(here::here("data/clean_data/housing_cleaned_data.csv"))
 
-# Summary for the top 10 highest and lowest home prices
-housing_summary <- housing_cleaned_data %>%
+# Get the top 10 and bottom 10 housing prices
+top_10 <- housing_cleaned_data %>%
+  arrange(desc(price)) %>%
+  slice(1:10)
+
+bottom_10 <- housing_cleaned_data %>%
+  arrange(price) %>%
+  slice(1:10)
+
+# Summary for the top 10 highest and bottom 10 lowest home prices
+top_10_summary <- top_10 %>%
   summarise(
+    Group = "Top 10",
     Mean_Price = mean(price),
     Median_Price = median(price),
     Max_Price = max(price),
     Min_Price = min(price)
   )
+
+bottom_10_summary <- bottom_10 %>%
+  summarise(
+    Group = "Bottom 10",
+    Mean_Price = mean(price),
+    Median_Price = median(price),
+    Max_Price = max(price),
+    Min_Price = min(price)
+  )
+
+# Combine the summaries for top 10 and bottom 10
+housing_summary <- bind_rows(top_10_summary, bottom_10_summary)
 
 # Display the summary table using gt
 housing_summary_gt <- housing_summary %>%
@@ -93,90 +125,75 @@ housing_summary_gt <- housing_summary %>%
   tab_header(
     title = md("**Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)**")
   )
-
-housing_summary_gt
-
-
 ```
-```{r}
-#| label: tbl-crime-summary
-#| tbl-cap: "Table 2: Summary Statistics of Crime Rates (2014-2023)"
-#| echo: false
+## Crime Rate Changes over Time {#subsection}
+Crime rate trends over the years (2014-2023) were analyzed for each crime type to understand patterns and shifts. This is visualized in the following plots:
 
+```{r}
+#| fig-pos: "H"
+#| message: false
+#| warning: false
+#| error: false
+#| label: fig-total-crime-trends
+#| fig-cap: "Figure 1: Total Crime Rates from 2014-2023"
+#| echo: false
 # Read in the crime data
 crime_cleaned_data <- read_csv("../data/clean_data/crime_cleaned_data.csv")
 
+# Summarize the mean crime rate for each year by averaging the rates across all crime types
+mean_crime_rates <- crime_cleaned_data %>%
+  group_by(year) %>%
+  summarise(mean_crime_rate = mean(rate, na.rm = TRUE))
 
-# Summarise crime data by calculating the mean for each crime rate across all years
-crime_summary <- crime_cleaned_data %>%
-  summarise(
-    Mean_Assault_Rate = rowMeans(select(., starts_with("assault_rate")), na.rm = TRUE),
-    Mean_Autotheft_Rate = rowMeans(select(., starts_with("autotheft_rate")), na.rm = TRUE),
-    Mean_Biketheft_Rate = rowMeans(select(., starts_with("biketheft_rate")), na.rm = TRUE),
-    Mean_Breakenter_Rate = rowMeans(select(., starts_with("breakenter_rate")), na.rm = TRUE),
-    Mean_Homicide_Rate = rowMeans(select(., starts_with("homicide_rate")), na.rm = TRUE),
-    Mean_Robbery_Rate = rowMeans(select(., starts_with("robbery_rate")), na.rm = TRUE),
-    Mean_Shooting_Rate = rowMeans(select(., starts_with("shooting_rate")), na.rm = TRUE),
-    Mean_Theftfrommv_Rate = rowMeans(select(., starts_with("theftfrommv_rate")), na.rm = TRUE),
-    Mean_Theftover_Rate = rowMeans(select(., starts_with("theftover_rate")), na.rm = TRUE)
-  )
-
-# Display the summary table using gt
-crime_summary_gt <- crime_summary %>%
-  gt() %>%
-  tab_header(
-    title = md("**Summary Statistics of Crime Rates (2014-2023)**")
-  )
-
-crime_summary_gt
-
-
-
-```
-
-
-**Discussion of Data Selection**
-I chose this dataset over the census data because...
-# Results {#sec-results}
-# Crime Rate Changes over Time {#subsection}
-Crime rate trends over the years (2014-2023) were analyzed for each crime type to understand patterns and shifts. This is visualized in the following plots:
-```{r}
-#| label: fig-transport-vs-stationary
-#| fig-cap: "Figure 1: Time-series visualization of Crime Rates from 2014-2023"
-#| echo: false
-
-crime_cleaned_data_long <- crime_cleaned_data %>%
-  pivot_longer(
-    cols = contains("rate"),  
-    names_to = "Crime_Type",   
-    values_to = "Rate"         
-  ) %>%
-  separate(Crime_Type, into = c("Crime", "Year"), sep = "_rate_")
-
-# Plot the time-series visualization of crime rates from 2014-2023
-crime_cleaned_data_long %>%
-  ggplot(aes(x = Year, y = Rate, color = Crime)) +
-  geom_line() +
-  facet_wrap(~ Crime, scales = "free_y") +
-  labs(title = "Crime Rate Trends in Toronto (2014-2023)",
+# Create a bar plot of mean crime rates from 2014-2023
+ggplot(mean_crime_rates, aes(x = factor(year), y = mean_crime_rate)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Mean Crime Rates in Toronto (2014-2023)",
        x = "Year",
-       y = "Crime Rate per 100,000 Residents") +
-  theme_minimal()
-
+       y = "Mean Crime Rate per 100,000 Residents") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+  scale_y_continuous(labels = comma)  # Format y-axis with whole numbers and commas
 
 ```
 
 ```{r}
-#| label: fig-percentile-crime-rates
-#| fig-cap: "Figure 2: Box Plots comparing Crime Rates in Top 10 vs Bottom 10 House Price Neighbourhoods"
+#| fig-pos: "H"
+#| message: false
+#| warning: false
+#| error: false
+#| label: tbl-crime-summary
+#| tbl-cap: "Figure 2: Summary Statistics of Crime Rates (2014-2023)"
 #| echo: false
 
-# Check column names of housing_cleaned_data
-names(housing_cleaned_data)
+# Summarize crime data by calculating the mean rate for each crime type and year
+crime_summary <- crime_cleaned_data %>%
+  group_by(crime, year) %>%
+  summarise(Mean_Rate = mean(rate, na.rm = TRUE)) %>%
+  ungroup()
 
-# Check column names of crime_cleaned_data
-names(crime_cleaned_data)
+# Create a bar plot for each crime type by year
+ggplot(crime_summary, aes(x = factor(year), y = Mean_Rate, fill = crime)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ crime, scales = "free_y") +  # Facet by crime type, allow different y scales
+  labs(title = "Mean Crime Rates by Year (2014-2023) for Each Crime Type",
+       x = "Year",
+       y = "Mean Crime Rate per 100,000 Residents",
+       fill = "Crime Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+# Results {#sec-results}
 
+## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods over 2014 to 2023 for Individual Crimes {#subsection}
+```{r}
+#| fig-pos: "H"
+#| message: false
+#| warning: false
+#| error: false
+#| label: fig-crime-comparison
+#| fig-cap: "Figure 3: Box Plots comparing Crime Rates in Top 10 vs Bottom 10 Home Price Neighborhoods"
+#| echo: false
 
 # Select the top 10 highest and lowest priced neighborhoods
 top_10_highest <- housing_cleaned_data %>%
@@ -185,7 +202,7 @@ top_10_highest <- housing_cleaned_data %>%
 top_10_lowest <- housing_cleaned_data %>%
   top_n(-10, price)
 
-# Add 'neighbourhood_type' to label the neighbourhoods
+# Add 'neighbourhood_type' to label the neighborhoods
 top_10_highest <- top_10_highest %>%
   mutate(neighbourhood_type = "Top 10 Highest")
 
@@ -195,83 +212,87 @@ top_10_lowest <- top_10_lowest %>%
 # Combine the two datasets (top and bottom neighborhoods)
 top_bottom_neighborhoods <- bind_rows(top_10_highest, top_10_lowest)
 
-# Filter the crime data for those top 10 highest and lowest priced neighborhoods
+# Merge the crime data with the top-bottom neighborhood data
 crime_high_low <- crime_cleaned_data %>%
-  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code)  # Make sure 'neighbourhood_code' is used here
+  inner_join(top_bottom_neighborhoods, by = c("hood_id" = "neighbourhood_code"))
 
-# Join the filtered crime data with the top/bottom housing data
-# Create an overall crime rate by summing all crime rate columns
-crime_high_low <- crime_cleaned_data %>%
-  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code) %>%
-  mutate(overall_crime_rate = rowSums(select(., contains("rate")), na.rm = TRUE))  # Sum of all crime rates
-
-# Join with housing data to get neighborhood type labels
+# Filter out rows with non-finite or missing crime rates
 crime_high_low <- crime_high_low %>%
-  left_join(top_bottom_neighborhoods, by = c("hood_id" = "neighbourhood_code"))
+  filter(is.finite(rate) & !is.na(rate))  # Remove non-finite and missing values
 
-# Box plot comparing overall crime rates between high and low-priced neighborhoods
-ggplot(crime_high_low, aes(x = neighbourhood_type, y = overall_crime_rate, fill = neighbourhood_type)) +
+# Create the boxplot
+ggplot(crime_high_low, aes(x = neighbourhood_type, y = rate, fill = neighbourhood_type)) +
   geom_boxplot() +
-  labs(title = "Overall Crime Rate Comparison Between High and Low-Priced Neighborhoods",
+  facet_wrap(~ crime, scales = "free_y") +  # Separate plot for each crime type
+  labs(title = "Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023",
        x = "Neighborhood Type",
-       y = "Overall Crime Rate per 100,000 Residents") +
+       y = "Crime Rate per 100,000 Residents") +
   theme_minimal()
-
 
 ```
 
 Box Plots Comparing Crime Rates for High vs. Low Price Neighborhoods:
+This plot shows a comparative analysis of crime rates between the Top 10 Highest and Bottom 10 Lowest home price neighborhoods in Toronto from 2014 to 2023. Each box plot represents the distribution of crime rates for different types of crime (e.g., assault, autotheft, biketheft) in these neighborhoods, with the y-axis representing the crime rate per 100,000 residents.
+
+Key Observations:
+Assault Rates:
+Assault rates are notably higher in low-priced neighborhoods than in high-priced ones. The median assault rate in the bottom 10 neighborhoods is around 500, while in the top 10 neighborhoods, it is closer to 250. The top neighborhoods also show less variability in assault rates.
+Auto Theft:
+Auto theft rates are slightly higher in bottom-priced neighborhoods, but the difference between the two groups is not as pronounced as for assault. Both groups exhibit a broad distribution, with several outliers in low-priced neighborhoods indicating significantly higher rates in certain years.
+Bike Theft:
+High-priced neighborhoods have a notably higher rate of bike theft compared to low-priced ones. The median bike theft rate in top neighborhoods is significantly larger, suggesting that wealthier neighborhoods may experience more of these types of non-violent crimes, possibly due to the greater number of bikes or higher-value targets.
+Break and Enter:
+The break and enter crime rate appears to be higher in low-priced neighborhoods, with a median crime rate around 400 incidents per 100,000 residents, compared to around 250 in high-priced neighborhoods. The spread of crime rates is more pronounced in low-priced areas.
+Homicide:
+Homicide rates in low-priced neighborhoods are significantly higher than in high-priced ones. While most of the values cluster around low rates (under 10 per 100,000 residents), there are some extreme outliers in low-priced neighborhoods.
+Robbery:
+Robbery rates are consistently higher in low-priced neighborhoods compared to high-priced ones. The difference in medians is noticeable, with the bottom 10 neighborhoods showing a broader range of robbery rates.
+Shooting:
+Shootings are more common in low-priced neighborhoods, with significantly higher variability and outliers. In contrast, high-priced neighborhoods show a relatively small number of shootings, with rates clustering below 25 incidents per 100,000 residents.
+Theft from Motor Vehicles:
+Theft from motor vehicles (theftfrommv) shows similar crime rates between both neighborhood groups. However, there is a slightly higher median and more variability in bottom-priced neighborhoods.
+Theft Over $5,000:
+Both groups exhibit similar trends in "theft over $5,000" rates. There is not a significant difference between the two groups, and both have fairly consistent rates over the years.
+Insights:
+Higher Crime in Low-Priced Neighborhoods: Violent crimes like assault, break and enter, homicide, robbery, and shooting tend to be more prevalent in neighborhoods with lower home prices. These areas also exhibit greater variability in crime rates, possibly reflecting more social instability or economic distress.
+Higher Non-Violent Crimes in High-Priced Neighborhoods: Interestingly, non-violent crimes like bike theft are more common in higher-priced neighborhoods, possibly reflecting the availability of more valuable goods in these areas.
+Socioeconomic Disparities in Crime: This analysis confirms the hypothesis that wealthier neighborhoods experience lower rates of violent crimes, while economically disadvantaged areas face greater exposure to violent crime. However, non-violent crimes (e.g., thefts) seem more prevalent in wealthier neighborhoods, suggesting different socio-economic dynamics at play.
 
 This helps visualize how crime rates differ between the top 10 highest and lowest-priced neighborhoods.
 
-```{r}
-
-
-```
-
-Bar Plots Comparing Crime Rates Between High and Low Price Neighborhoods:
-This will provide a clear comparison between the two groups for each type of crime.
+## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Overall Crime {#subsection}
 
 ```{r}
-#| label: fig-transport-vs-stationary
-#| fig-cap: "Figure 2: Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
+#| fig-pos: "H"
+#| message: false
+#| warning: false
+#| error: false
+#| label: fig-crime-time-series
+#| fig-cap: "Figure 4: Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
 #| echo: false
 
-# Bar plot comparing crime rates for top 10 highest vs. lowest price neighborhoods
-# First, pivot the crime data longer to create a year column
-crime_high_low_long <- crime_cleaned_data %>%
-  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code) %>%
-  pivot_longer(cols = contains("rate"), 
-               names_to = "Crime_Type_Year", 
-               values_to = "Rate")
+# Filter the crime data for top 10 highest and lowest priced neighborhoods
+crime_high_low <- crime_cleaned_data %>%
+  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code)
 
-# Separate the Crime_Type_Year column into 'Crime_Type' and 'Year'
-crime_high_low_long <- crime_high_low_long %>%
-  separate(Crime_Type_Year, into = c("Crime_Type", "Year"), sep = "_rate_")
-
-# Convert the 'Year' column to numeric
-crime_high_low_long <- crime_high_low_long %>%
-  mutate(Year = as.numeric(Year))
-
-# Calculate the overall crime rate for each neighborhood and year
-# Using either rowSums (for summing) or rowMeans (for averaging)
-crime_high_low_yearly <- crime_high_low_long %>%
-  group_by(hood_id, Year) %>%
-  summarise(overall_crime_rate = sum(Rate, na.rm = TRUE)) %>%
+# Calculate the overall crime rate by summing the rates of all crime types per neighborhood and year
+crime_high_low_yearly <- crime_high_low %>%
+  group_by(hood_id, year) %>%
+  summarise(overall_crime_rate = sum(rate, na.rm = TRUE)) %>%
   ungroup()
 
-# Join with housing data to get neighborhood type labels
+# Join the crime data with the top-bottom neighborhood data to get neighborhood type labels
 crime_high_low_yearly <- crime_high_low_yearly %>%
   left_join(top_bottom_neighborhoods, by = c("hood_id" = "neighbourhood_code"))
 
 # Group by neighborhood type and year, then calculate the average overall crime rate
 crime_yearly_summary <- crime_high_low_yearly %>%
-  group_by(neighbourhood_type, Year) %>%
+  group_by(neighbourhood_type, year) %>%
   summarise(avg_overall_crime_rate = mean(overall_crime_rate, na.rm = TRUE)) %>%
   ungroup()
 
-# Bar plot comparing overall crime rates between top and bottom-priced neighborhoods for each year
-ggplot(crime_yearly_summary, aes(x = Year, y = avg_overall_crime_rate, fill = neighbourhood_type)) +
+# Create the bar plot comparing overall crime rates between top and bottom-priced neighborhoods for each year
+ggplot(crime_yearly_summary, aes(x = year, y = avg_overall_crime_rate, fill = neighbourhood_type)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Overall Crime Rate for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
        x = "Year",
@@ -280,200 +301,78 @@ ggplot(crime_yearly_summary, aes(x = Year, y = avg_overall_crime_rate, fill = ne
   scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))  
 
 ```
+## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Individual Crimes {#subsection}
 ```{r}
-# First, pivot the crime data longer to create a year column
-crime_high_low_long <- crime_cleaned_data %>%
-  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code) %>%
-  pivot_longer(cols = contains("rate"), 
-               names_to = "Crime_Type_Year", 
-               values_to = "Rate")
+#| message: false
+#| warning: false
+#| error: false
+#| fig-pos: "H"
+#| label: fig-crime-time-series-individuals
+#| fig-cap: "Figure 5: Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
+#| echo: false
 
-# Separate the Crime_Type_Year column into 'Crime_Type' and 'Year'
-crime_high_low_long <- crime_high_low_long %>%
-  separate(Crime_Type_Year, into = c("Crime_Type", "Year"), sep = "_rate_")
+# List of crimes to investigate
+crimes_to_investigate <- c("assault", "autotheft", "biketheft", "breakenter", "homicide", "robbery", "shooting", "theftfrommv", "theftover")
 
-# Convert the 'Year' column to numeric
-crime_high_low_long <- crime_high_low_long %>%
-  mutate(Year = as.numeric(Year))
+# Filter for top/bottom 10 neighborhoods
+crime_high_low <- crime_cleaned_data %>%
+  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code)
 
-# Join with housing data to get neighborhood type labels
-crime_high_low_long <- crime_high_low_long %>%
+# Join the crime data with the top-bottom neighborhood data to get neighborhood type labels
+crime_high_low <- crime_high_low %>%
   left_join(top_bottom_neighborhoods, by = c("hood_id" = "neighbourhood_code"))
-### Bar Plot for Assault Rates ###
 
-# Filter for assault rates
-assault_rates <- crime_high_low_long %>%
-  filter(Crime_Type == "assault") %>%
-  group_by(neighbourhood_type, Year) %>%
-  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
-  ungroup()
+# Group by crime type, neighborhood type, and year to calculate the average crime rate
+crime_high_low_summary <- crime_high_low %>%
+  group_by(crime, neighbourhood_type, year) %>%
+  summarise(avg_crime_rate = mean(rate, na.rm = TRUE), .groups = 'drop')
 
-# Create bar plot for assault rates
-ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
+# Create a single bar plot with facets for each crime type
+ggplot(crime_high_low_summary, aes(x = year, y = avg_crime_rate, fill = neighbourhood_type)) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Assault Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+  facet_wrap(~ crime, scales = "free_y") +  # Facet for each crime type
+  labs(title = "Crime Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
        x = "Year",
-       y = "Average Assault Rate per 100,000 Residents") +
+       y = "Average Crime Rate per 100,000 Residents",
+       fill = "Neighborhood Type") +
   theme_minimal() +
-  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
-```
-
-```{r}
-
-### Bar Plot for Motor Vehicle Theft Rates (Autotheft) ###
-
-# Filter for motor vehicle theft (autotheft) rates
-autotheft_rates <- crime_high_low_long %>%
-  filter(Crime_Type == "autotheft") %>%
-  group_by(neighbourhood_type, Year) %>%
-  summarise(avg_autotheft_rate = mean(Rate, na.rm = TRUE)) %>%
-  ungroup()
-
-# Create bar plot for motor vehicle theft rates
-ggplot(autotheft_rates, aes(x = Year, y = avg_autotheft_rate, fill = neighbourhood_type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Motor Vehicle Theft Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
-       x = "Year",
-       y = "Average Motor Vehicle Theft Rate per 100,000 Residents") +
-  theme_minimal() +
-  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
-```
-```{r}
-### Bar Plot for Shooting Rates ###
-
-# Filter for shooting rates
-assault_rates <- crime_high_low_long %>%
-  filter(Crime_Type == "shooting") %>%
-  group_by(neighbourhood_type, Year) %>%
-  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
-  ungroup()
-
-# Create bar plot for assault rates
-ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Shooting Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
-       x = "Year",
-       y = "Average Shooting Rate per 100,000 Residents") +
-  theme_minimal() +
-  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
+  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
 
 ```
-```{r}
-### Bar Plot for Break and Enter Rates ###
-
-# Filter for shooting rates
-assault_rates <- crime_high_low_long %>%
-  filter(Crime_Type == "breakenter") %>%
-  group_by(neighbourhood_type, Year) %>%
-  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
-  ungroup()
-
-# Create bar plot for assault rates
-ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Break and Enter Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
-       x = "Year",
-       y = "Average Break and Enter Rate per 100,000 Residents") +
-  theme_minimal() +
-  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
-
-```
-```{r}
-### Bar Plot for Robbery Rates ###
-
-# Filter for shooting rates
-assault_rates <- crime_high_low_long %>%
-  filter(Crime_Type == "robbery") %>%
-  group_by(neighbourhood_type, Year) %>%
-  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
-  ungroup()
-
-# Create bar plot for assault rates
-ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Robbery Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
-       x = "Year",
-       y = "Average Robbery Rate per 100,000 Residents") +
-  theme_minimal() +
-  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
-
-```
-Figure 2 breaks down the number of clients transported to shelters versus those who remained stationary on buses at Spadina Station, providing a deeper understanding of how the initiative's resources were utilized.
-
-The number of 
-
-# Model
-
-The goal of our modeling strategy is twofold. Firstly, we aim to understand the factors driving the demand for transportation to warming centers versus the decision to remain stationary. Here, we briefly describe the Bayesian analysis model used to investigate these patterns. Background details and diagnostics are included in [Appendix -@sec-model-details].
-
-
-## Model set-up
-
-Define $y_i$ as the number of clients using the service on day $i$. We model the relationship between $y_i$ and weather conditions using a Bayesian regression model:
-
-\begin{align} y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \ \mu_i &= \alpha + \beta_1 \times \text{temperature}_i + \beta_2 \times \text{precipitation}_i \ \alpha &\sim \mbox{Normal}(0, 2.5) \ \beta_1, \beta_2 &\sim \mbox{Normal}(0, 2.5) \ \sigma &\sim \mbox{Exponential}(1) \end{align}
-
-We run the model in R [@citeR] using the rstanarm package from @rstanarm. We use the default priors from rstanarm.
-
-
-
-\begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
-\end{align}
-
-
-
-
-### Model justification
-
-We expect a positive relationship between adverse weather conditions (e.g., lower temperatures and higher precipitation) and the number of clients using the service. This is based on the assumption that more individuals will seek shelter during harsher weather conditions.
+Crime-Specific Analysis:
+Assault:
+The assault rates remain consistently higher in Bottom 10 Lowest neighborhoods than in Top 10 Highest neighborhoods across all years.
+There seems to be a slight downward trend in the top neighborhoods around 2019–2021, while rates in lower neighborhoods remain relatively stable.
+Autotheft:
+Bottom 10 Lowest neighborhoods show a steady increase in autotheft rates from 2015 onward, peaking around 2022.
+Top 10 Highest neighborhoods have significantly lower autotheft rates throughout the period, but they also show a slight upward trend, though the increase is far more gradual.
+Biketheft:
+In the earlier years (2015–2017), Bottom 10 Lowest neighborhoods have higher bike theft rates, but Top 10 Highest neighborhoods catch up around 2018–2020.
+From 2020 onwards, the bike theft rates in Top 10 Highest neighborhoods are actually higher than those in the Bottom 10 Lowest neighborhoods.
+Breakenter (Breaking and Entering):
+Rates for break and enter crimes fluctuate more in Bottom 10 Lowest neighborhoods, peaking around 2016–2017 and then decreasing slightly.
+Top 10 Highest neighborhoods show more stable but much lower break and enter rates overall.
+Homicide:
+Both neighborhoods show very low homicide rates (as expected), but Bottom 10 Lowest neighborhoods exhibit slightly higher rates.
+There is a gradual upward trend in homicides in Bottom 10 Lowest neighborhoods from 2016 to 2023, although the scale is relatively small (0 to 7.5 per 100,000 residents).
+Robbery:
+Robbery rates in Bottom 10 Lowest neighborhoods are consistently higher than in Top 10 Highest neighborhoods.
+The gap between the two neighborhood types widens in 2020 and onwards, with a notable increase in robbery rates in Bottom 10 Lowest neighborhoods.
+Shooting:
+Bottom 10 Lowest neighborhoods experience a significant peak in shooting rates around 2018, after which they decline.
+Top 10 Highest neighborhoods have almost negligible shooting rates in comparison.
+Theftfrommv (Theft from Motor Vehicle):
+The theft from motor vehicle rates are much higher in Bottom 10 Lowest neighborhoods, and they fluctuate over the years, with no consistent trend.
+The rates for Top 10 Highest neighborhoods remain fairly stable and low across the entire time period.
+Theftover (Theft over $5,000):
+Theft over $5,000 shows stable but relatively low rates for both neighborhood types, though Bottom 10 Lowest neighborhoods have a slight edge.
+There's an increasing trend in Bottom 10 Lowest neighborhoods starting in 2020.
 
 
 # Results
 
 Our results are summarized in @tbl-modelresults.
-
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory Models of Client Usage Based on Weather Conditions"
-#| warning: false
-
-library(rstanarm)
-
-first_model <- readRDS(file = here::here("models/first_model.rds"))
-
-modelsummary::modelsummary(
-  list(
-    "First Model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
-)
-
-```
-
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
-#| warning: false
-
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
-)
-```
 
 
 # Discussion
@@ -517,15 +416,6 @@ In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. Th
 #| fig-cap: "Examining how the model fits, and is affected by, the data"
 #| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
 
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
-
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
 ```
 
 ## Diagnostics
@@ -534,20 +424,8 @@ posterior_vs_prior(first_model) +
 
 @fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
 
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
 
-plot(first_model, "trace")
 
-plot(first_model, "rhat")
-```
 
 
 
