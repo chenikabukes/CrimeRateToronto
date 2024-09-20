@@ -1,13 +1,11 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
-author: 
-  - First author
-  - Another author
-thanks: "Code and data are available at: LINK."
-date: today
+title: "Analysis of Crime Statistics from 2014 to 2023 in Neighborhoods of Varying Home Price"
+subtitle: "A Statistical Basis for Policy Improvement"
+author: Chenika Bukes
+thanks: "Code and data are available at: https://github.com/chenikabukes/TorontoDataset"
+date: 24/09/2024
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "The abstract answers: 1) what was done, 2) what was found, and 3) why this matters (all at a high level). Likely four sentences. Abstract must make clear what we learn about the world because of this paper."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -18,71 +16,406 @@ bibliography: references.bib
 #| warning: false
 #| message: false
 
-library(tidyverse)
-library(palmerpenguins)
+library("tidyverse")
+library("gt")
+
 ```
 
 
 # Introduction
 
-You can and should cross-reference sections and sub-sections. We use @citeR and @rohan.
+Housing prices and crime rates are often perceived as indicators of the socio-economic environment of a city’s neighborhoods. Higher home prices are typically associated with safer, more affluent areas, while lower home prices may correlate with higher crime rates and other social challenges. However, these relationships are not always straightforward and may vary across different regions and time periods.
 
-The remainder of this paper is structured as follows. @sec-data....
+This report aims to investigate the relationship between housing prices and crime rates in various neighborhoods of Toronto from 2014 to 2023. By focusing on the 10 neighborhoods with the highest home prices and the 10 neighborhoods with the lowest home prices, this analysis seeks to identify any significant patterns or correlations between housing prices and crime rates over time.
 
+Through statistical analysis and visualizations, we aim to answer the following key questions:
+
+How have crime rates changed in Toronto’s neighborhoods over the last decade?
+Are neighborhoods with higher home prices experiencing lower crime rates, or is the relationship more complex?
+What types of crimes are most prevalent in high-price vs. low-price neighborhoods?
+The findings from this analysis will provide insights into the socio-economic dynamics of Toronto's neighborhoods and serve as a basis for city planners and policymakers in addressing crime prevention strategies.
 
 
 # Data {#sec-data}
+# Raw Data {#sub-section}
+The data for this analysis comes from two key sources within Toronto's Open Data portal:
 
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
+**Housing Price Data**: This dataset contains home prices for various neighborhoods in Toronto. The data includes details such as neighborhood name, neighborhood ID, and the average home price for each area. The housing data is extracted from the “Wellbeing Toronto” dataset, which provides information on home prices in Toronto’s neighborhoods. The raw dataset contains multiple columns representing various housing and socio-economic indicators. For the purpose of this analysis, the column of interest is the average home price for each neighborhood, which has been cleaned and filtered for further analysis.
+
+**Crime Statistics Data**: This dataset provides crime statistics for each neighborhood, with detailed rates for various types of crimes, including:
+  - Assault
+  - Auto theft
+  - Bike theft
+  - Break and enter
+  - Homicide
+  - Robbery
+  - Shooting
+  - Theft from motor vehicle
+  - Theft over $5,000
+The crime data spans from 2014 to 2023 and includes crime rates for each of these categories on an annual basis. The crime rates are reported per 100,000 residents, allowing for comparisons across neighborhoods with different population sizes.
+
+
+**Data Cleaning and Preparation**
+To prepare the data for analysis, the following steps were taken:
+
+  - Housing Data: The home price data was cleaned by removing any invalid or missing entries, converting home prices to numeric values, and filtering out zero or negative prices. The final dataset consists of neighborhoods and their corresponding home prices.
+
+  - Crime Data: The crime data was cleaned by filtering out any missing or anomalous entries. The crime rates for each neighborhood were then aggregated by year and by crime type to allow for time-series analysis and comparisons across neighborhoods.
+
+**Focus Neighborhoods**
+The neighborhoods with the 10 highest and 10 lowest home prices were selected for focused analysis. These neighborhoods represent a broad spectrum of socio-economic conditions and are expected to exhibit varying crime patterns.
+
+
+Explain if there were similar datasets that could have been used and why they were not. If variables were constructed then this should be mentioned, and high-level cleaning aspects of note should be mentioned, but this section should focus on the destination, not the journey. It is important to understand what the variables look like by including graphs, and possibly tables, of all observations, along with discussion of those graphs and the other features of these data. Summary statistics should also be included, and well as any relationships between the variables. If this becomes too detailed, then appendices could be used.
+
+Below is an overview of the housing dataset, presented in Table 1, and visualizations that illustrate key trends in the data.
 
 ```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
+#| label: tbl-housing-summary
+#| tbl-cap: "Table 1: Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)"
 #| echo: false
 
-ggplot(penguins, aes(x = island, fill = species)) +
-  geom_bar(alpha = 0.8) +
-  scale_fill_manual(values = c("darkorange","purple","cyan4"),
-                    guide = "none") +
-  theme_minimal() +
-  facet_wrap(~species, ncol = 1) +
-  coord_flip()
+# Read in the housing data
+housing_cleaned_data <- read_csv("../data/clean_data/housing_cleaned_data.csv")
+
+# Summary for the top 10 highest and lowest home prices
+housing_summary <- housing_cleaned_data %>%
+  summarise(
+    Mean_Price = mean(price),
+    Median_Price = median(price),
+    Max_Price = max(price),
+    Min_Price = min(price)
+  )
+
+# Display the summary table using gt
+housing_summary_gt <- housing_summary %>%
+  gt() %>%
+  tab_header(
+    title = md("**Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)**")
+  )
+
+housing_summary_gt
+
+
+```
+```{r}
+#| label: tbl-crime-summary
+#| tbl-cap: "Table 2: Summary Statistics of Crime Rates (2014-2023)"
+#| echo: false
+
+# Read in the crime data
+crime_cleaned_data <- read_csv("../data/clean_data/crime_cleaned_data.csv")
+
+
+# Summarise crime data by calculating the mean for each crime rate across all years
+crime_summary <- crime_cleaned_data %>%
+  summarise(
+    Mean_Assault_Rate = rowMeans(select(., starts_with("assault_rate")), na.rm = TRUE),
+    Mean_Autotheft_Rate = rowMeans(select(., starts_with("autotheft_rate")), na.rm = TRUE),
+    Mean_Biketheft_Rate = rowMeans(select(., starts_with("biketheft_rate")), na.rm = TRUE),
+    Mean_Breakenter_Rate = rowMeans(select(., starts_with("breakenter_rate")), na.rm = TRUE),
+    Mean_Homicide_Rate = rowMeans(select(., starts_with("homicide_rate")), na.rm = TRUE),
+    Mean_Robbery_Rate = rowMeans(select(., starts_with("robbery_rate")), na.rm = TRUE),
+    Mean_Shooting_Rate = rowMeans(select(., starts_with("shooting_rate")), na.rm = TRUE),
+    Mean_Theftfrommv_Rate = rowMeans(select(., starts_with("theftfrommv_rate")), na.rm = TRUE),
+    Mean_Theftover_Rate = rowMeans(select(., starts_with("theftover_rate")), na.rm = TRUE)
+  )
+
+# Display the summary table using gt
+crime_summary_gt <- crime_summary %>%
+  gt() %>%
+  tab_header(
+    title = md("**Summary Statistics of Crime Rates (2014-2023)**")
+  )
+
+crime_summary_gt
+
+
+
 ```
 
-Talk more about it.
 
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
+**Discussion of Data Selection**
+I chose this dataset over the census data because...
+# Results {#sec-results}
+# Crime Rate Changes over Time {#subsection}
+Crime rate trends over the years (2014-2023) were analyzed for each crime type to understand patterns and shifts. This is visualized in the following plots:
+```{r}
+#| label: fig-transport-vs-stationary
+#| fig-cap: "Figure 1: Time-series visualization of Crime Rates from 2014-2023"
+#| echo: false
+
+crime_cleaned_data_long <- crime_cleaned_data %>%
+  pivot_longer(
+    cols = contains("rate"),  
+    names_to = "Crime_Type",   
+    values_to = "Rate"         
+  ) %>%
+  separate(Crime_Type, into = c("Crime", "Year"), sep = "_rate_")
+
+# Plot the time-series visualization of crime rates from 2014-2023
+crime_cleaned_data_long %>%
+  ggplot(aes(x = Year, y = Rate, color = Crime)) +
+  geom_line() +
+  facet_wrap(~ Crime, scales = "free_y") +
+  labs(title = "Crime Rate Trends in Toronto (2014-2023)",
+       x = "Year",
+       y = "Crime Rate per 100,000 Residents") +
+  theme_minimal()
+
+
+```
 
 ```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
+#| label: fig-percentile-crime-rates
+#| fig-cap: "Figure 2: Box Plots comparing Crime Rates in Top 10 vs Bottom 10 House Price Neighbourhoods"
 #| echo: false
-#| warning: false
-#| message: false
 
-analysis_data <- read_csv(here::here("data/analysis_data/analysis_data.csv"))
+# Check column names of housing_cleaned_data
+names(housing_cleaned_data)
 
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
+# Check column names of crime_cleaned_data
+names(crime_cleaned_data)
+
+
+# Select the top 10 highest and lowest priced neighborhoods
+top_10_highest <- housing_cleaned_data %>%
+  top_n(10, price)
+
+top_10_lowest <- housing_cleaned_data %>%
+  top_n(-10, price)
+
+# Add 'neighbourhood_type' to label the neighbourhoods
+top_10_highest <- top_10_highest %>%
+  mutate(neighbourhood_type = "Top 10 Highest")
+
+top_10_lowest <- top_10_lowest %>%
+  mutate(neighbourhood_type = "Bottom 10 Lowest")
+
+# Combine the two datasets (top and bottom neighborhoods)
+top_bottom_neighborhoods <- bind_rows(top_10_highest, top_10_lowest)
+
+# Filter the crime data for those top 10 highest and lowest priced neighborhoods
+crime_high_low <- crime_cleaned_data %>%
+  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code)  # Make sure 'neighbourhood_code' is used here
+
+# Join the filtered crime data with the top/bottom housing data
+# Create an overall crime rate by summing all crime rate columns
+crime_high_low <- crime_cleaned_data %>%
+  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code) %>%
+  mutate(overall_crime_rate = rowSums(select(., contains("rate")), na.rm = TRUE))  # Sum of all crime rates
+
+# Join with housing data to get neighborhood type labels
+crime_high_low <- crime_high_low %>%
+  left_join(top_bottom_neighborhoods, by = c("hood_id" = "neighbourhood_code"))
+
+# Box plot comparing overall crime rates between high and low-priced neighborhoods
+ggplot(crime_high_low, aes(x = neighbourhood_type, y = overall_crime_rate, fill = neighbourhood_type)) +
+  geom_boxplot() +
+  labs(title = "Overall Crime Rate Comparison Between High and Low-Priced Neighborhoods",
+       x = "Neighborhood Type",
+       y = "Overall Crime Rate per 100,000 Residents") +
+  theme_minimal()
+
+
 ```
 
-Talk way more about it. 
+Box Plots Comparing Crime Rates for High vs. Low Price Neighborhoods:
+
+This helps visualize how crime rates differ between the top 10 highest and lowest-priced neighborhoods.
+
+```{r}
 
 
+```
+
+Bar Plots Comparing Crime Rates Between High and Low Price Neighborhoods:
+This will provide a clear comparison between the two groups for each type of crime.
+
+```{r}
+#| label: fig-transport-vs-stationary
+#| fig-cap: "Figure 2: Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
+#| echo: false
+
+# Bar plot comparing crime rates for top 10 highest vs. lowest price neighborhoods
+# First, pivot the crime data longer to create a year column
+crime_high_low_long <- crime_cleaned_data %>%
+  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code) %>%
+  pivot_longer(cols = contains("rate"), 
+               names_to = "Crime_Type_Year", 
+               values_to = "Rate")
+
+# Separate the Crime_Type_Year column into 'Crime_Type' and 'Year'
+crime_high_low_long <- crime_high_low_long %>%
+  separate(Crime_Type_Year, into = c("Crime_Type", "Year"), sep = "_rate_")
+
+# Convert the 'Year' column to numeric
+crime_high_low_long <- crime_high_low_long %>%
+  mutate(Year = as.numeric(Year))
+
+# Calculate the overall crime rate for each neighborhood and year
+# Using either rowSums (for summing) or rowMeans (for averaging)
+crime_high_low_yearly <- crime_high_low_long %>%
+  group_by(hood_id, Year) %>%
+  summarise(overall_crime_rate = sum(Rate, na.rm = TRUE)) %>%
+  ungroup()
+
+# Join with housing data to get neighborhood type labels
+crime_high_low_yearly <- crime_high_low_yearly %>%
+  left_join(top_bottom_neighborhoods, by = c("hood_id" = "neighbourhood_code"))
+
+# Group by neighborhood type and year, then calculate the average overall crime rate
+crime_yearly_summary <- crime_high_low_yearly %>%
+  group_by(neighbourhood_type, Year) %>%
+  summarise(avg_overall_crime_rate = mean(overall_crime_rate, na.rm = TRUE)) %>%
+  ungroup()
+
+# Bar plot comparing overall crime rates between top and bottom-priced neighborhoods for each year
+ggplot(crime_yearly_summary, aes(x = Year, y = avg_overall_crime_rate, fill = neighbourhood_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Overall Crime Rate for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+       x = "Year",
+       y = "Average Overall Crime Rate per 100,000 Residents") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))  
+
+```
+```{r}
+# First, pivot the crime data longer to create a year column
+crime_high_low_long <- crime_cleaned_data %>%
+  filter(hood_id %in% top_bottom_neighborhoods$neighbourhood_code) %>%
+  pivot_longer(cols = contains("rate"), 
+               names_to = "Crime_Type_Year", 
+               values_to = "Rate")
+
+# Separate the Crime_Type_Year column into 'Crime_Type' and 'Year'
+crime_high_low_long <- crime_high_low_long %>%
+  separate(Crime_Type_Year, into = c("Crime_Type", "Year"), sep = "_rate_")
+
+# Convert the 'Year' column to numeric
+crime_high_low_long <- crime_high_low_long %>%
+  mutate(Year = as.numeric(Year))
+
+# Join with housing data to get neighborhood type labels
+crime_high_low_long <- crime_high_low_long %>%
+  left_join(top_bottom_neighborhoods, by = c("hood_id" = "neighbourhood_code"))
+### Bar Plot for Assault Rates ###
+
+# Filter for assault rates
+assault_rates <- crime_high_low_long %>%
+  filter(Crime_Type == "assault") %>%
+  group_by(neighbourhood_type, Year) %>%
+  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create bar plot for assault rates
+ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Assault Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+       x = "Year",
+       y = "Average Assault Rate per 100,000 Residents") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
+```
+
+```{r}
+
+### Bar Plot for Motor Vehicle Theft Rates (Autotheft) ###
+
+# Filter for motor vehicle theft (autotheft) rates
+autotheft_rates <- crime_high_low_long %>%
+  filter(Crime_Type == "autotheft") %>%
+  group_by(neighbourhood_type, Year) %>%
+  summarise(avg_autotheft_rate = mean(Rate, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create bar plot for motor vehicle theft rates
+ggplot(autotheft_rates, aes(x = Year, y = avg_autotheft_rate, fill = neighbourhood_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Motor Vehicle Theft Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+       x = "Year",
+       y = "Average Motor Vehicle Theft Rate per 100,000 Residents") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
+```
+```{r}
+### Bar Plot for Shooting Rates ###
+
+# Filter for shooting rates
+assault_rates <- crime_high_low_long %>%
+  filter(Crime_Type == "shooting") %>%
+  group_by(neighbourhood_type, Year) %>%
+  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create bar plot for assault rates
+ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Shooting Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+       x = "Year",
+       y = "Average Shooting Rate per 100,000 Residents") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
+
+```
+```{r}
+### Bar Plot for Break and Enter Rates ###
+
+# Filter for shooting rates
+assault_rates <- crime_high_low_long %>%
+  filter(Crime_Type == "breakenter") %>%
+  group_by(neighbourhood_type, Year) %>%
+  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create bar plot for assault rates
+ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Break and Enter Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+       x = "Year",
+       y = "Average Break and Enter Rate per 100,000 Residents") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
+
+```
+```{r}
+### Bar Plot for Robbery Rates ###
+
+# Filter for shooting rates
+assault_rates <- crime_high_low_long %>%
+  filter(Crime_Type == "robbery") %>%
+  group_by(neighbourhood_type, Year) %>%
+  summarise(avg_assault_rate = mean(Rate, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create bar plot for assault rates
+ggplot(assault_rates, aes(x = Year, y = avg_assault_rate, fill = neighbourhood_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Robbery Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+       x = "Year",
+       y = "Average Robbery Rate per 100,000 Residents") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))
+
+```
+Figure 2 breaks down the number of clients transported to shelters versus those who remained stationary on buses at Spadina Station, providing a deeper understanding of how the initiative's resources were utilized.
+
+The number of 
 
 # Model
 
-The goal of our modelling strategy is twofold. Firstly,...
+The goal of our modeling strategy is twofold. Firstly, we aim to understand the factors driving the demand for transportation to warming centers versus the decision to remain stationary. Here, we briefly describe the Bayesian analysis model used to investigate these patterns. Background details and diagnostics are included in [Appendix -@sec-model-details].
 
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
 
 ## Model set-up
 
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
+Define $y_i$ as the number of clients using the service on day $i$. We model the relationship between $y_i$ and weather conditions using a Bayesian regression model:
+
+\begin{align} y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \ \mu_i &= \alpha + \beta_1 \times \text{temperature}_i + \beta_2 \times \text{precipitation}_i \ \alpha &\sim \mbox{Normal}(0, 2.5) \ \beta_1, \beta_2 &\sim \mbox{Normal}(0, 2.5) \ \sigma &\sim \mbox{Exponential}(1) \end{align}
+
+We run the model in R [@citeR] using the rstanarm package from @rstanarm. We use the default priors from rstanarm.
+
+
 
 \begin{align} 
 y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
@@ -93,14 +426,12 @@ y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
 \sigma &\sim \mbox{Exponential}(1)
 \end{align}
 
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+
 
 
 ### Model justification
 
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
-
-We can use maths by including latex between dollar signs, for instance $\theta$.
+We expect a positive relationship between adverse weather conditions (e.g., lower temperatures and higher precipitation) and the number of clients using the service. This is based on the assumption that more individuals will seek shelter during harsher weather conditions.
 
 
 # Results
@@ -110,13 +441,22 @@ Our results are summarized in @tbl-modelresults.
 ```{r}
 #| echo: false
 #| eval: true
+#| label: tbl-modelresults
+#| tbl-cap: "Explanatory Models of Client Usage Based on Weather Conditions"
 #| warning: false
-#| message: false
 
 library(rstanarm)
 
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
+first_model <- readRDS(file = here::here("models/first_model.rds"))
+
+modelsummary::modelsummary(
+  list(
+    "First Model" = first_model
+  ),
+  statistic = "mad",
+  fmt = 2
+)
+
 ```
 
 ```{r}
@@ -134,8 +474,6 @@ modelsummary::modelsummary(
   fmt = 2
 )
 ```
-
-
 
 
 # Discussion
