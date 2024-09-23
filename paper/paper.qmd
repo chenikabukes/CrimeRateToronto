@@ -11,8 +11,7 @@ format:
     toc-depth: 3 
     number-sections: true  
     toc-title: "Table of Contents" 
-abstract: "This study analyzes crime rates across Toronto's neighborhoods from 2014 to 2023, focusing on the 10 neighborhoods with the highest home prices and the 10 neighborhoods with the lowest home prices. We investigated crime trends across nine categories, including assault, robbery, and autotheft, comparing the average crime rates between high-price and low-price neighborhoods. The analysis reveals a significant disparity in crime rates, with lower-priced neighborhoods consistently exhibiting higher crime rates, especially in violent crimes such as shootings and robberies. These findings underscore the importance of targeted crime prevention strategies in economically disadvantaged neighborhoods and suggest that housing affordability is closely linked to public safety concerns."
-number-sections: true
+abstract: "This paper analyzes crime rates across Toronto's neighborhoods from 2014 to 2023, focusing on the 10 neighborhoods with the highest home prices and the 10 neighborhoods with the lowest home prices. Home price acts as a proxy for socio-economic conditions, with higher home prices suggesting wealthier neighborhoods, and lower prices implying economically disadvantaged areas. It investigates crime rate trends across nine categories, comparing the average crime rates between high-price and low-price neighborhoods. The analysis reveals a significant disparity in crime rates, with lower-priced neighborhoods consistently exhibiting higher violent crime rates such as shootings, assaults, and murders while high-price neighbourhoods experience higher theft crime rates. These findings underscore the importance of targeted crime prevention strategies for varying economic standing neighborhoods and suggests that housing affordability is closely linked to public safety concerns."
 bibliography: references.bib
 
 ---
@@ -24,66 +23,81 @@ bibliography: references.bib
 #| error: false
 
 library("tidyverse")
-library("gt")
 library("scales")
+library("knitr")
 ```
 
 
 # Introduction
 
-We run the model in R [@citeR]. Understanding the relationship between housing prices and crime rates is critical for urban planning and public policy. Housing prices are often considered a key indicator of socio-economic status, with higher-priced neighborhoods typically associated with lower crime rates, greater economic stability, and improved social services. Conversely, lower-priced neighborhoods are often linked to higher crime rates, economic challenges, and reduced access to resources. However, while these patterns may hold in many cases, the relationship between housing prices and crime rates is complex and not universally consistent across all regions. This complexity raises the need for more detailed investigation into how these factors interact in specific urban settings, such as Toronto.
+Housing prices are often regarded as a key indicator of socioeconomic status, with higher-priced neighborhoods typically associated with lower crime rates, greater economic stability, and improved access to social services. Conversely, lower-priced neighborhoods are frequently linked to higher crime rates, financial instability, and reduced access to critical resources [@Kitchen]. While these patterns may hold true in many instances, the relationship between housing prices and crime rates is not universally consistent across regions. This complexity underscores the need for a more detailed investigation into how these factors interact in specific urban environments, such as Toronto.
 
-Despite numerous studies exploring socio-economic indicators and crime, there remains a gap in understanding how housing prices, particularly in high- and low-income neighborhoods, correlate with different types of crimes over time. Previous research often treats these neighborhoods as static entities, overlooking the dynamic nature of crime trends and their fluctuations over time. This paper aims to fill this gap by analyzing the crime rates across Toronto’s neighborhoods from 2014 to 2023, specifically focusing on the 10 neighborhoods with the highest and the 10 neighborhoods with the lowest home prices.
+This paper analyzes crime trends and their fluctuations over time across Toronto’s neighborhoods from 2014 to 2023, focusing on the 10 neighborhoods with the highest and lowest average home prices as a proxy for socioeconomic status. Using this comparison, I examine the relationship between neighborhood wealth and crime rates to uncover potential socio-economic patterns in crime prevalence. The analysis explores nine distinct crime categories and compares trends between high-priced and low-priced neighborhoods. The objective is to identify significant crime patterns, assess whether wealthier neighborhoods consistently experience lower crime rates, and investigate which types of crimes are most prevalent in different socio-economic contexts. 
 
-In this analysis, we examined nine distinct crime categories—including assault, robbery, and autotheft—and compared the trends in both high- and low-priced neighborhoods. The goal was to identify significant patterns in crime rates, understand whether wealthier neighborhoods consistently experience lower crime rates, and investigate which types of crimes are most prevalent in different socio-economic contexts. Our findings reveal notable disparities, particularly in violent crimes such as shootings and robberies, which were found to be more prevalent in lower-income neighborhoods.
+Our findings reveal marked disparities, particularly in violent crimes such as shootings and assaults, which are more prevalent in lower home price neighbourhoods. As well, non-violent crimes such as theft, had signficantly higher rates in higher home price neighbourhoods. Violent crimes (assault, homicide, shootings) and autotheft showed the most significant up trend from 2014 to 2023. All crimes stagnated or dropped during 2020-2021 which can be attributed to the Covid-19 pandemic lockdowns. These insights are crucial for urban planning and policy development, as they highlight the need for targeted crime prevention strategies. By understanding how crime rates vary across neighborhoods with different economic conditions, city planners and policymakers can allocate resources more effectively and design interventions tailored to specific socio-economic groups.
 
-These findings are important because they offer insights that can help city planners and policymakers design targeted crime prevention strategies. By understanding how crime rates differ across neighborhoods with varying economic conditions, more effective resource allocation and policy interventions can be implemented. The structure of this paper is as follows: first, we review the existing literature on the relationship between housing prices and crime. Second, we present our methodology and data sources. Third, we provide a detailed analysis of the results, followed by a discussion of the implications for public policy and future research.
+The analysis in this paper was conducted using R [@citeR]. The paper is structured as follows: first, I review the selected data sources, their relevance to the subject, and how the data was cleaned using the janitor [@janitor], readxl [@readxl], tidyverse [@tidyverse] packages. Second, I present key visualizations using the scales [@scales] and knitr [@knitr] packages to explore the relationships between neighborhood home prices, crime rates, and temporal trends from 2014 to 2023. Third, I provide an analysis of these visualizations and discuss their potential implications for public policy and future research into neighborhood-specific crime prevention strategies, based on the observed temporal trends in crime rates.
 
 # Data {#sec-data}
 ##  Raw Data {#sub-section}
-The data for this analysis comes from two primary sources obtained from Toronto’s Open Data portal:
+The data for this analysis comes from two primary sources obtained from Toronto’s Open Data portal [@OpenDataPortal]:
 
-**Housing Price Data**: This dataset includes information on average home prices across various neighborhoods in Toronto. It serves as an indicator of the socio-economic status of each neighborhood. The data is extracted from the "Wellbeing Toronto" dataset, which records various socio-economic variables across the city. For this analysis, the focus is on the average home price for each neighborhood, identified by the neighborhood name and ID. This variable acts as a proxy for socio-economic conditions, with higher home prices suggesting wealthier neighborhoods, and lower prices implying economically disadvantaged areas.
+**Housing Price Data**: This dataset includes information on average home prices across various neighborhoods in Toronto [@WellbeingToronto]. It serves as an indicator of the socio-economic status of each neighborhood. The data is extracted from the "Wellbeing Toronto" dataset, which records various socio-economic variables across the city. Wellbeing Toronto is a "website that allows you to learn more about the neighbourhood you work, play or live in" according to the City of Toronto. Many City of Toronto divisions, Agencies, Boards and Commissions are involved in gathering this data. Wellbeing Toronto only uses municipal information for each of the indicators it publishes. They have comprehensive information on how data was gathered for their indicators [@DataGathering] and seem to have taken every precaution for as accurate as possible statistic collection for the neighbourhoods of Toronto. For this analysis, the focus is on the average home price for each neighborhood, identified by the neighborhood name and ID. This variable acts as a proxy for socio-economic conditions, with higher home prices suggesting wealthier neighborhoods, and lower prices implying economically disadvantaged areas.
 
-**Crime Statistics Data**: This dataset contains detailed annual crime statistics for each neighborhood between 2014 and 2023. It includes crime rates per 100,000 residents for a range of criminal activities:
-  - Assault
-  - Auto theft
-  - Bike theft
-  - Break and enter
-  - Homicide
-  - Robbery
-  - Shooting
-  - Theft from motor vehicle
-  - Theft over $5,000
+**Crime Statistics Data**: This dataset contains detailed annual crime statistics for each neighborhood between 2014 and 2023. It was originally published by the Toronto Police Service on the Public Safety Data Portal [@NeighbourhoodCrimeRates]. The data does not include occurrences of crime that were deemed "unfounded" according to Statistics Canada. To determine the rate of a crime, the Toronto Police Service use their police records for crime numbers in each neighbourhood and used data from Environics Analytics for population estimates during the year of crime. All of these sources are reputable and it appears thoughtful methods of measurement were applied to most closely capture the population statsitics presented in this dataset. It includes crime rates per 100,000 residents for a range of crimes:
+
+- Assault
+  
+- Auto theft
+  
+- Bike theft
+  
+- Break and enter
+  
+- Homicide
+  
+- Robbery
+  
+- Shooting
+  
+- Theft from motor vehicle
+  
+- Theft over $5,000
+  
 The crime data provides a robust view of criminal activity across various categories, offering insight into both violent and non-violent crime trends in different neighborhoods.
 
-**Data Selection Reasoning**
-While Toronto’s census data also contains valuable socio-economic information, the housing price dataset was chosen because it was updated more frequently and provides clearer spatial links between neighborhoods and socio-economic status. The census data, recorded in 2015 and 2021, presented two key limitations for this analysis: (1) It was not yet fully updated to 2021 data, and (2) the census dataset organizes data by individual household income rather than neighborhood-level data, making it more challenging to compare neighborhoods directly. The housing price data, already grouped by neighborhood code, was easier to integrate with the crime statistics for this study's purpose.
+**Data Selection Reasoning**: While Toronto’s census data also contains valuable socio-economic information, the housing price dataset was chosen because it was updated more frequently and provides clearer spatial links between neighborhoods and socio-economic status. The census data, recorded in 2015 and 2021, presented two key limitations for this analysis: 
 
-**Variables and their Roles**
-The key variables under examination are:
+- The features I would have used were not updated to 2021 data, and 
+
+- the census dataset organizes data by individual household income rather than neighborhood-level data, making it more challenging to compare neighborhoods directly. 
+
+The housing price data, already grouped by neighborhood code, was easier to integrate with the crime statistics for this study's purpose.
+
+**Variables and their Roles**: The key variables under examination are:
+
   - Neighborhood Name and ID: Each neighborhood is identified by both a name and a unique ID code.
-  - Home Prices: Average home prices (in CAD) across neighborhoods, reflecting the relative affluence of each area.
-  - Crime Rates: Crime statistics for nine different crime categories (listed above), measured as the number of incidents per 100,000 residents annually. These crime rates provide a normalized metric for comparing areas with different population sizes.
+  
+  - Home Prices: Average home prices across neighborhoods, reflecting the relative affluence of each area.
+  
+  - Crime Rates: Crime statistics for nine different crime categories, measured as the number of incidents per 100,000 residents annually. These crime rates provide a normalized metric for comparing areas with different population sizes.
 These variables allow for a detailed analysis of the relationship between socio-economic status (as proxied by home prices) and crime rates, both across crime categories and over time.
 
 ## Data Cleaning and Preparation
-The housing data was prepared by filtering out invalid entries and ensuring that all price data was numeric. Only neighborhoods with valid, positive home price values were included. The crime data was cleaned by removing any missing entries and focusing exclusively on the crime rates. Non-relevant columns (i.e., raw crime counts) were removed in favor of normalized rates per 100,000 residents, making comparisons across neighborhoods more meaningful.
+**Housing Price Data**: The housing data was prepared by filtering out invalid entries and ensuring that all price data was numeric. To investigate the potential relationship between socio-economic status and crime, the analysis focuses on the neighborhoods with the 10 highest and the 10 lowest average home prices. Thus, home price data for all other neighbourhoods were filtred out. These neighborhoods represent a wide socio-economic spectrum and are expected to exhibit varying patterns of criminal activity. By isolating these groups, we can assess whether wealthier neighborhoods experience lower crime rates and determine which types of crimes are more prevalent in less affluent areas. 
 
-**Focus Neighborhoods**
-To investigate the potential relationship between socio-economic status and crime, the analysis focuses on the neighborhoods with the 10 highest and the 10 lowest average home prices. These neighborhoods represent a wide socio-economic spectrum and are expected to exhibit varying patterns of criminal activity. By isolating these groups, we can assess whether wealthier neighborhoods experience lower crime rates and determine which types of crimes are more prevalent in less affluent areas.
+**Crime Statistics Data**: The crime data was cleaned by removing any missing entries and focusing exclusively on the crime rates. Non-relevant columns (i.e., raw crime counts) were removed in favor of normalized rates per 100,000 residents, making comparisons across neighborhoods more meaningful.
 
 ## Summary Statistics and Visualisation 
-Below, we provide an overview of the housing price data for the top 10 highest and bottom 10 lowest-priced neighborhoods, followed by visualizations that illustrate trends in crime rates across Toronto from 2014 to 2023.
+### Summary Statistics of Housing Price Data 
+Below, we provide an overview of the housing price data for the top 10 highest and bottom 10 lowest-priced neighborhoods.
 
 ```{r}
-#| fig-pos: "H"
-#| message: false
-#| warning: false
-#| error: false
-#| label: tbl-housing-summary
-#| tbl-cap: "Table 1: Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)"
+#| tbl-cap: "Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)"
 #| echo: false
+#| message: false
+#| show_col_types: FALSE
+#| tbl-pos: "H"
 
 # Read in the housing data
 housing_cleaned_data <- read_csv(here::here("data/clean_data/housing_cleaned_data.csv"))
@@ -110,8 +124,8 @@ top_10_summary <- top_10 %>%
 bottom_10_summary <- bottom_10 %>%
   summarise(
     Group = "Bottom 10",
-    Mean_Price = mean(price),
-    Median_Price = median(price),
+    Mean_Price = round(mean(price)),
+    Median_Price = round(median(price)),
     Max_Price = max(price),
     Min_Price = min(price)
   )
@@ -119,24 +133,22 @@ bottom_10_summary <- bottom_10 %>%
 # Combine the summaries for top 10 and bottom 10
 housing_summary <- bind_rows(top_10_summary, bottom_10_summary)
 
-# Display the summary table using gt
-housing_summary_gt <- housing_summary %>%
-  gt() %>%
-  tab_header(
-    title = md("**Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)**")
-  )
+# Display the summary table using kable for better PDF rendering
+kable(housing_summary, 
+      caption = "Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)", 
+      align = c('l', 'c', 'c', 'c', 'c'))
+
 ```
-## Crime Rate Changes over Time {#subsection}
+### Mean Crime Rate Changes over Time
 Crime rate trends over the years (2014-2023) were analyzed for each crime type to understand patterns and shifts. This is visualized in the following plots:
 
 ```{r}
+#| fig-cap: "Total Crime Rates from 2014-2023"
 #| fig-pos: "H"
-#| message: false
-#| warning: false
-#| error: false
-#| label: fig-total-crime-trends
-#| fig-cap: "Figure 1: Total Crime Rates from 2014-2023"
+#| show_col_types: FALSE
 #| echo: false
+#| message: false
+
 # Read in the crime data
 crime_cleaned_data <- read_csv("../data/clean_data/crime_cleaned_data.csv")
 
@@ -152,19 +164,23 @@ ggplot(mean_crime_rates, aes(x = factor(year), y = mean_crime_rate)) +
        x = "Year",
        y = "Mean Crime Rate per 100,000 Residents") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
-  scale_y_continuous(labels = comma)  # Format y-axis with whole numbers and commas
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  
+  scale_y_continuous(labels = comma)  
 
 ```
+Figure 1 showcases a rather steady trend in crime rates with a dip in 2020 and 2021 which could be attributed to Covid-19 lockdowns, followed by a spike in 2023 of approximately 25% increase in mean crime rates across the city of Toronto's neighbourhoods. 
 
+### Mean Individual Crime Rate Changes over Time 
 ```{r}
 #| fig-pos: "H"
 #| message: false
 #| warning: false
 #| error: false
-#| label: tbl-crime-summary
-#| tbl-cap: "Figure 2: Summary Statistics of Crime Rates (2014-2023)"
+#| fig-cap: "Average Individual Crime Rates over all Neighbourhoods (2014-2023)"
 #| echo: false
+#| fig-width: 7
+#| fig-height: 5
+
 
 # Summarize crime data by calculating the mean rate for each crime type and year
 crime_summary <- crime_cleaned_data %>%
@@ -175,25 +191,54 @@ crime_summary <- crime_cleaned_data %>%
 # Create a bar plot for each crime type by year
 ggplot(crime_summary, aes(x = factor(year), y = Mean_Rate, fill = crime)) +
   geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~ crime, scales = "free_y") +  # Facet by crime type, allow different y scales
+  facet_wrap(~ crime, scales = "free_y") +  
   labs(title = "Mean Crime Rates by Year (2014-2023) for Each Crime Type",
        x = "Year",
        y = "Mean Crime Rate per 100,000 Residents",
        fill = "Crime Type") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1, size = 8)) +  
+  theme(panel.spacing = unit(2, "lines"))  
 ```
+Figure 2 displays the mean crime rate for each crime type individually. There is a clear pattern of crime rates being at their lowest levels during 2020-2021 for all crime types, which can be argued to be due to Covid-19 lockdowns.
+
+**Up-trending Individual Crime Rates**
+
+- Autotheft displays an exponential trend, increasing drastically from 2015 levels. 
+
+- Homicide was stagnant until the sudden increase 300% from 2 to 6 in 2023. 
+
+- Assaults have increased by 34% since 2020 to 2023.
+
+- Theftover $5000 has also increased by 22% from 2019 levels to 2023.  
+
+- Shooting has increased by over 300% since 2015 levels 
+
+**Down-trending or Stagnant Individual Crime Rates**
+
+- Theft from motor vehicles rates has remained around 300 per 100,000 from 2015 to 2023.
+
+- Robbery rates have decreased significantly from 2015 to 2023 by about 34%. 
+
+- Bike theft rates has decreased from highs in 2017-2019 of 150 to 2023 lows of 100.
+
+- Break and enter rates have remained relatively stagnant from 2015, with dips corresponding to Covid-19 lockdowns. 
+
+Overall, there is a clear up-trend in violent crimes and down-trend in "pettier", less-violent crimes. 
+
 # Results {#sec-results}
 
-## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods over 2014 to 2023 for Individual Crimes {#subsection}
+## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods for Individual Crimes {#results-1}
 ```{r}
 #| fig-pos: "H"
 #| message: false
 #| warning: false
 #| error: false
 #| label: fig-crime-comparison
-#| fig-cap: "Figure 3: Box Plots comparing Crime Rates in Top 10 vs Bottom 10 Home Price Neighborhoods"
+#| fig-cap: "Box Plots comparing Crime Rates in Top 10 vs Bottom 10 Home Price Neighborhoods"
 #| echo: false
+#| fig-width: 7
+#| fig-height: 5
 
 # Select the top 10 highest and lowest priced neighborhoods
 top_10_highest <- housing_cleaned_data %>%
@@ -204,10 +249,10 @@ top_10_lowest <- housing_cleaned_data %>%
 
 # Add 'neighbourhood_type' to label the neighborhoods
 top_10_highest <- top_10_highest %>%
-  mutate(neighbourhood_type = "Top 10 Highest")
+  mutate(neighbourhood_type = "Top 10")
 
 top_10_lowest <- top_10_lowest %>%
-  mutate(neighbourhood_type = "Bottom 10 Lowest")
+  mutate(neighbourhood_type = "Bottom 10")
 
 # Combine the two datasets (top and bottom neighborhoods)
 top_bottom_neighborhoods <- bind_rows(top_10_highest, top_10_lowest)
@@ -227,40 +272,38 @@ ggplot(crime_high_low, aes(x = neighbourhood_type, y = rate, fill = neighbourhoo
   labs(title = "Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023",
        x = "Neighborhood Type",
        y = "Crime Rate per 100,000 Residents") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 10)  
+  )
 
 ```
 
-Box Plots Comparing Crime Rates for High vs. Low Price Neighborhoods:
-This plot shows a comparative analysis of crime rates between the Top 10 Highest and Bottom 10 Lowest home price neighborhoods in Toronto from 2014 to 2023. Each box plot represents the distribution of crime rates for different types of crime (e.g., assault, autotheft, biketheft) in these neighborhoods, with the y-axis representing the crime rate per 100,000 residents.
+Figure 3 shows a comparative analysis of crime rates between the top 10 highest and bottom 10 lowest home price neighborhoods in Toronto from 2014 to 2023. 
 
-Key Observations:
-Assault Rates:
-Assault rates are notably higher in low-priced neighborhoods than in high-priced ones. The median assault rate in the bottom 10 neighborhoods is around 500, while in the top 10 neighborhoods, it is closer to 250. The top neighborhoods also show less variability in assault rates.
-Auto Theft:
-Auto theft rates are slightly higher in bottom-priced neighborhoods, but the difference between the two groups is not as pronounced as for assault. Both groups exhibit a broad distribution, with several outliers in low-priced neighborhoods indicating significantly higher rates in certain years.
-Bike Theft:
-High-priced neighborhoods have a notably higher rate of bike theft compared to low-priced ones. The median bike theft rate in top neighborhoods is significantly larger, suggesting that wealthier neighborhoods may experience more of these types of non-violent crimes, possibly due to the greater number of bikes or higher-value targets.
-Break and Enter:
-The break and enter crime rate appears to be higher in low-priced neighborhoods, with a median crime rate around 400 incidents per 100,000 residents, compared to around 250 in high-priced neighborhoods. The spread of crime rates is more pronounced in low-priced areas.
-Homicide:
-Homicide rates in low-priced neighborhoods are significantly higher than in high-priced ones. While most of the values cluster around low rates (under 10 per 100,000 residents), there are some extreme outliers in low-priced neighborhoods.
-Robbery:
-Robbery rates are consistently higher in low-priced neighborhoods compared to high-priced ones. The difference in medians is noticeable, with the bottom 10 neighborhoods showing a broader range of robbery rates.
-Shooting:
-Shootings are more common in low-priced neighborhoods, with significantly higher variability and outliers. In contrast, high-priced neighborhoods show a relatively small number of shootings, with rates clustering below 25 incidents per 100,000 residents.
-Theft from Motor Vehicles:
-Theft from motor vehicles (theftfrommv) shows similar crime rates between both neighborhood groups. However, there is a slightly higher median and more variability in bottom-priced neighborhoods.
-Theft Over $5,000:
-Both groups exhibit similar trends in "theft over $5,000" rates. There is not a significant difference between the two groups, and both have fairly consistent rates over the years.
-Insights:
-Higher Crime in Low-Priced Neighborhoods: Violent crimes like assault, break and enter, homicide, robbery, and shooting tend to be more prevalent in neighborhoods with lower home prices. These areas also exhibit greater variability in crime rates, possibly reflecting more social instability or economic distress.
-Higher Non-Violent Crimes in High-Priced Neighborhoods: Interestingly, non-violent crimes like bike theft are more common in higher-priced neighborhoods, possibly reflecting the availability of more valuable goods in these areas.
-Socioeconomic Disparities in Crime: This analysis confirms the hypothesis that wealthier neighborhoods experience lower rates of violent crimes, while economically disadvantaged areas face greater exposure to violent crime. However, non-violent crimes (e.g., thefts) seem more prevalent in wealthier neighborhoods, suggesting different socio-economic dynamics at play.
+**Key Observations**:
 
-This helps visualize how crime rates differ between the top 10 highest and lowest-priced neighborhoods.
+- **Assault**: Assault rates are notably higher in low-priced neighborhoods than in high-priced ones. The median assault rate in the bottom 10 neighborhoods is around 500, while in the top 10 neighborhoods, it is closer to 250. The top neighborhoods also show less variability in assault rates.
 
-## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Overall Crime {#subsection}
+- **Autotheft**: Auto theft rates are slightly higher in bottom-priced neighborhoods, but the difference between the two groups is not as pronounced as for assault. Both groups exhibit a broad distribution, with several outliers in low-priced neighborhoods indicating significantly higher rates in certain years.
+
+- **Biketheft**: High-priced neighborhoods have a notably higher rate of bike theft compared to low-priced ones. The median bike theft rate in top neighborhoods is significantly larger, suggesting that wealthier neighborhoods may experience more of these types of non-violent crimes, possibly due to the greater number of bikes or higher-value targets.
+
+- **Break and Enter**: The break and enter crime rate appears to be higher in low-priced neighborhoods, with a median crime rate around 400 incidents per 100,000 residents, compared to around 250 in high-priced neighborhoods. The spread of crime rates is more pronounced in low-priced areas.
+
+- **Homicide**: Homicide rates in low-priced neighborhoods are significantly higher than in high-priced ones. While most of the values cluster around low rates (under 10 per 100,000 residents), there are some extreme outliers in low-priced neighborhoods.
+
+- **Robbery**: Robbery rates are consistently higher in low-priced neighborhoods compared to high-priced ones. The difference in medians is noticeable, with the bottom 10 neighborhoods showing a broader range of robbery rates.
+
+- **Shooting**: Shootings are more common in low-priced neighborhoods, with significantly higher variability and outliers. In contrast, high-priced neighborhoods show a relatively small number of shootings, with rates clustering below 25 incidents per 100,000 residents.
+
+- **Theft from motor vehicles**: this shows similar crime rates between both neighborhood groups. However, there is a slightly higher median and more variability in bottom-priced neighborhoods.
+
+- **Theft over $5,000**: Both groups exhibit similar trends in "theft over $5,000" rates. There is not a significant difference between the two groups, and both have fairly consistent rates over the years.
+
+Altogether, we see that there is higher violent crime in low-priced neighborhoods. Violent crimes like assault, break and enter, homicide, robbery, and shooting tend to be more prevalent in neighborhoods with lower home prices. These areas also exhibit greater variability in crime rates, possibly reflecting more social instability or economic distress. As well, there is higher non-violent Crimes in high-priced neighborhoods. Interestingly, non-violent crimes like bike theft are more common in higher-priced neighborhoods, possibly reflecting the availability of more valuable goods in these areas.
+
+## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Overall Crime {#results-2}
 
 ```{r}
 #| fig-pos: "H"
@@ -268,7 +311,7 @@ This helps visualize how crime rates differ between the top 10 highest and lowes
 #| warning: false
 #| error: false
 #| label: fig-crime-time-series
-#| fig-cap: "Figure 4: Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
+#| fig-cap: "Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
 #| echo: false
 
 # Filter the crime data for top 10 highest and lowest priced neighborhoods
@@ -294,22 +337,29 @@ crime_yearly_summary <- crime_high_low_yearly %>%
 # Create the bar plot comparing overall crime rates between top and bottom-priced neighborhoods for each year
 ggplot(crime_yearly_summary, aes(x = year, y = avg_overall_crime_rate, fill = neighbourhood_type)) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Overall Crime Rate for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
+  labs(title = "Average Overall Crime Rate for Top 10 vs Bottom 10 Home Price Neighborhoods from 2014-2023",
        x = "Year",
        y = "Average Overall Crime Rate per 100,000 Residents") +
   theme_minimal() +
-  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red"))  
+  scale_fill_manual(values = c("Top 10" = "blue", "Bottom 10" = "red")) +
+  theme(
+    plot.title = element_text(size = 10)  
+  )
 
 ```
-## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Individual Crimes {#subsection}
+Figure 4 shows that the overall crime rate has increased at a much higher rate in the top 10 highest price neighbourhoods than in the bottom 10 lowest price neighbourhoods. Both the highest and lowest priced neighbourhoods have experienced a steady increase in overall crime rates from 2015 to 2023, with the highest crime rate being that of the top 10 highest price neighbourhoods in 2023. 
+
+## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Individual Crimes {#results-3}
 ```{r}
 #| message: false
 #| warning: false
 #| error: false
 #| fig-pos: "H"
 #| label: fig-crime-time-series-individuals
-#| fig-cap: "Figure 5: Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
+#| fig-cap: "Crime Rate Time Series from 2014 to 2023 for Top 10 vs Bottom 10 Housing Price Neighbourhoods"
 #| echo: false
+#| fig-width: 7
+#| fig-height: 5
 
 # List of crimes to investigate
 crimes_to_investigate <- c("assault", "autotheft", "biketheft", "breakenter", "homicide", "robbery", "shooting", "theftfrommv", "theftover")
@@ -330,103 +380,65 @@ crime_high_low_summary <- crime_high_low %>%
 # Create a single bar plot with facets for each crime type
 ggplot(crime_high_low_summary, aes(x = year, y = avg_crime_rate, fill = neighbourhood_type)) +
   geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~ crime, scales = "free_y") +  # Facet for each crime type
+  facet_wrap(~ crime, scales = "free_y") +  
   labs(title = "Crime Rates for Top 10 vs Bottom 10 Home Price Neighborhoods by Year",
        x = "Year",
        y = "Average Crime Rate per 100,000 Residents",
        fill = "Neighborhood Type") +
   theme_minimal() +
-  scale_fill_manual(values = c("Top 10 Highest" = "blue", "Bottom 10 Lowest" = "red")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+  scale_fill_manual(values = c("Top 10" = "blue", "Bottom 10" = "red")) +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(
+    plot.title = element_text(size = 10)  
+  )
 
 ```
-Crime-Specific Analysis:
-Assault:
-The assault rates remain consistently higher in Bottom 10 Lowest neighborhoods than in Top 10 Highest neighborhoods across all years.
-There seems to be a slight downward trend in the top neighborhoods around 2019–2021, while rates in lower neighborhoods remain relatively stable.
-Autotheft:
-Bottom 10 Lowest neighborhoods show a steady increase in autotheft rates from 2015 onward, peaking around 2022.
-Top 10 Highest neighborhoods have significantly lower autotheft rates throughout the period, but they also show a slight upward trend, though the increase is far more gradual.
-Biketheft:
-In the earlier years (2015–2017), Bottom 10 Lowest neighborhoods have higher bike theft rates, but Top 10 Highest neighborhoods catch up around 2018–2020.
-From 2020 onwards, the bike theft rates in Top 10 Highest neighborhoods are actually higher than those in the Bottom 10 Lowest neighborhoods.
-Breakenter (Breaking and Entering):
-Rates for break and enter crimes fluctuate more in Bottom 10 Lowest neighborhoods, peaking around 2016–2017 and then decreasing slightly.
-Top 10 Highest neighborhoods show more stable but much lower break and enter rates overall.
-Homicide:
-Both neighborhoods show very low homicide rates (as expected), but Bottom 10 Lowest neighborhoods exhibit slightly higher rates.
-There is a gradual upward trend in homicides in Bottom 10 Lowest neighborhoods from 2016 to 2023, although the scale is relatively small (0 to 7.5 per 100,000 residents).
-Robbery:
-Robbery rates in Bottom 10 Lowest neighborhoods are consistently higher than in Top 10 Highest neighborhoods.
-The gap between the two neighborhood types widens in 2020 and onwards, with a notable increase in robbery rates in Bottom 10 Lowest neighborhoods.
-Shooting:
-Bottom 10 Lowest neighborhoods experience a significant peak in shooting rates around 2018, after which they decline.
-Top 10 Highest neighborhoods have almost negligible shooting rates in comparison.
-Theftfrommv (Theft from Motor Vehicle):
-The theft from motor vehicle rates are much higher in Bottom 10 Lowest neighborhoods, and they fluctuate over the years, with no consistent trend.
-The rates for Top 10 Highest neighborhoods remain fairly stable and low across the entire time period.
-Theftover (Theft over $5,000):
-Theft over $5,000 shows stable but relatively low rates for both neighborhood types, though Bottom 10 Lowest neighborhoods have a slight edge.
-There's an increasing trend in Bottom 10 Lowest neighborhoods starting in 2020.
+Figure 5 displays the average crime rate amongst the top 10 and bottom 10 priced neighbourhoods for each individual crime over the years 2014-2023. 
 
+- **Assault**: The assault rates remain consistently higher in Bottom 10 Lowest neighborhoods than in Top 10 Highest neighborhoods across all years. There seems to be a slight downward trend in the top neighborhoods around 2019–2021, while rates in lower neighborhoods remain relatively stable.
 
-# Results
+- **Autotheft**: Bottom 10 Lowest neighborhoods show a steady increase in autotheft rates from 2015 onward, peaking around 2022. Top 10 Highest neighborhoods have significantly lower autotheft rates throughout the period, but they also show a slight upward trend, though the increase is far more gradual.
 
-Our results are summarized in @tbl-modelresults.
+- **Biketheft**: In the earlier years (2015–2017), Bottom 10 Lowest neighborhoods have higher bike theft rates, but Top 10 Highest neighborhoods catch up around 2018–2020. From 2020 onwards, the bike theft rates in Top 10 Highest neighborhoods are actually higher than those in the Bottom 10 Lowest neighborhoods.
+
+- **Break and Enter**: Rates for break and enter crimes fluctuate more in Bottom 10 Lowest neighborhoods, peaking around 2016–2017 and then decreasing slightly. Top 10 Highest neighborhoods show more stable but much lower break and enter rates overall.
+
+- **Homicide**: Both neighborhoods show very low homicide rates (as expected), but Bottom 10 Lowest neighborhoods exhibit slightly higher rates. There is a gradual upward trend in homicides in Bottom 10 Lowest neighborhoods from 2016 to 2023, although the scale is relatively small (0 to 7.5 per 100,000 residents).
+
+- **Robbery**: Robbery rates in Bottom 10 Lowest neighborhoods are consistently higher than in Top 10 Highest neighborhoods. The gap between the two neighborhood types widens in 2020 and onwards, with a notable increase in robbery rates in Bottom 10 Lowest neighborhoods.
+
+- **Shooting**: Bottom 10 Lowest neighborhoods experience a significant peak in shooting rates around 2018, after which they decline. Top 10 Highest neighborhoods have almost negligible shooting rates in comparison.
+
+- **Theft from Motor Vehicle**: The theft from motor vehicle rates are much higher in Bottom 10 Lowest neighborhoods, and they fluctuate over the years, with no consistent trend. The rates for Top 10 Highest neighborhoods remain fairly stable and low across the entire time period.
+
+- **Theft over $5,000**: This crime shows stable but relatively low rates for both neighborhood types, though Bottom 10 Lowest neighborhoods have a slight edge. There's an increasing trend in Bottom 10 Lowest neighborhoods starting in 2020.
 
 
 # Discussion
 
-## First discussion point {#sec-first-point}
+This analysis confirms the hypothesis that wealthier neighborhoods experience lower rates of violent crimes, while economically disadvantaged areas face greater exposure to violent crime. However, non-violent crimes seem more prevalent in wealthier neighborhoods, suggesting different socio-economic dynamics at play.
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+The analysis of crime rates from 2014 to 2023 across Toronto's neighborhoods, focusing on the top 10 highest and bottom 10 lowest-priced neighborhoods, reveals significant disparities in crime patterns based on socioeconomic status. The results highlight a clear trend where violent crimes—such as assault, homicide, and shootings—are more prevalent in lower-priced neighborhoods, suggesting a direct correlation between economic disadvantage and exposure to violence. On the other hand, non-violent crimes like thefts (especially bike thefts and theft from motor vehicles) are more common in wealthier areas, reflecting different crime dynamics in these neighborhoods.
 
-## Second discussion point
+Key observations include:
 
-## Third discussion point
+- **Violent Crimes**: Assault, shootings, and homicides show higher rates in low-priced neighborhoods, with noticeable outliers and variability, indicating potentially greater social instability.
 
-## Weaknesses and next steps
+- **Non-Violent Crimes**: Higher-priced neighborhoods experience more theft-related crimes, likely due to the presence of higher-value targets.
 
-Weaknesses and next steps should also be included.
+- **Temporal Trends**: There is a city-wide spike in crime rates in 2023, following a period of lower crime during the 2020–2021 COVID-19 lockdowns, emphasizing the complex interactions between public health crises and crime patterns.
+
+These findings suggest that public policy should be tailored to address the specific needs of different economic groups. Low-income neighborhoods require increased focus on violence prevention, while higher-income areas might benefit from enhanced property crime deterrence. Moreover, the evidence points to the need for long-term, community-based crime reduction strategies that consider the broader social and economic factors contributing to crime.
+
+Future work should focus on expanding the scope of the analysis to include more socioeconomic indicators, such as employment rates and education levels, to better understand the root causes of crime and inform more effective policy interventions.
+
+
 
 \newpage
 
 \appendix
 
 # Appendix {-}
-
-
-# Additional data details
-
-# Model details {#sec-model-details}
-
-## Posterior predictive check
-
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
-
-```{r}
-#| eval: true
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
-
-```
-
-## Diagnostics
-
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
-
-
-
 
 
 \newpage
