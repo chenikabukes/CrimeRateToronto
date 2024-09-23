@@ -66,7 +66,7 @@ The data for this analysis comes from two primary sources obtained from Toronto�
   
 The crime data provides a robust view of criminal activity across various categories, offering insight into both violent and non-violent crime trends in different neighborhoods.
 
-**Data Selection Reasoning**: While Toronto’s census data also contains valuable socio-economic information, the housing price dataset was chosen because it was updated more frequently and provides clearer spatial links between neighborhoods and socio-economic status. The census data, recorded in 2015 and 2021, presented two key limitations for this analysis: 
+**Data Selection Reasoning**: While Toronto’s census data also contains valuable socio-economic information, the housing price dataset was chosen because it was updated more frequently and provides clearer spatial links between neighborhoods and socio-economic status. The census data, recorded in 2014 and 2021, presented two key limitations for this analysis: 
 
 - The features I would have used were not updated to 2021 data, and 
 
@@ -204,7 +204,7 @@ Figure 2 displays the mean crime rate for each crime type individually. There is
 
 **Up-trending Individual Crime Rates**
 
-- Autotheft displays an exponential trend, increasing drastically from 2015 levels. 
+- Autotheft displays an exponential trend, increasing drastically from 2014 levels. 
 
 - Homicide was stagnant until the sudden increase 300% from 2 to 6 in 2023. 
 
@@ -212,17 +212,17 @@ Figure 2 displays the mean crime rate for each crime type individually. There is
 
 - Theftover $5000 has also increased by 22% from 2019 levels to 2023.  
 
-- Shooting has increased by over 300% since 2015 levels 
+- Shooting has increased by over 300% since 2014 levels 
 
 **Down-trending or Stagnant Individual Crime Rates**
 
-- Theft from motor vehicles rates has remained around 300 per 100,000 from 2015 to 2023.
+- Theft from motor vehicles rates has remained around 300 per 100,000 from 2014 to 2023.
 
-- Robbery rates have decreased significantly from 2015 to 2023 by about 34%. 
+- Robbery rates have decreased significantly from 2014 to 2023 by about 34%. 
 
 - Bike theft rates has decreased from highs in 2017-2019 of 150 to 2023 lows of 100.
 
-- Break and enter rates have remained relatively stagnant from 2015, with dips corresponding to Covid-19 lockdowns. 
+- Break and enter rates have remained relatively stagnant from 2014, with dips corresponding to Covid-19 lockdowns. 
 
 Overall, there is a clear up-trend in violent crimes and down-trend in "pettier", less-violent crimes. 
 
@@ -347,7 +347,7 @@ ggplot(crime_yearly_summary, aes(x = year, y = avg_overall_crime_rate, fill = ne
   )
 
 ```
-Figure 4 shows that the overall crime rate has increased at a much higher rate in the top 10 highest price neighbourhoods than in the bottom 10 lowest price neighbourhoods. Both the highest and lowest priced neighbourhoods have experienced a steady increase in overall crime rates from 2015 to 2023, with the highest crime rate being that of the top 10 highest price neighbourhoods in 2023. 
+Figure 4 shows that the overall crime rate has increased at a much higher rate in the top 10 highest price neighbourhoods than in the bottom 10 lowest price neighbourhoods. Both the highest and lowest priced neighbourhoods have experienced a steady increase in overall crime rates from 2014 to 2023, with the highest crime rate being that of the top 10 highest price neighbourhoods in 2023. 
 
 ## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Individual Crimes {#results-3}
 ```{r}
@@ -397,9 +397,9 @@ Figure 5 displays the average crime rate amongst the top 10 and bottom 10 priced
 
 - **Assault**: The assault rates remain consistently higher in Bottom 10 Lowest neighborhoods than in Top 10 Highest neighborhoods across all years. There seems to be a slight downward trend in the top neighborhoods around 2019–2021, while rates in lower neighborhoods remain relatively stable.
 
-- **Autotheft**: Bottom 10 Lowest neighborhoods show a steady increase in autotheft rates from 2015 onward, peaking around 2022. Top 10 Highest neighborhoods have significantly lower autotheft rates throughout the period, but they also show a slight upward trend, though the increase is far more gradual.
+- **Autotheft**: Bottom 10 Lowest neighborhoods show a steady increase in autotheft rates from 2014 onward, peaking around 2022. Top 10 Highest neighborhoods have significantly lower autotheft rates throughout the period, but they also show a slight upward trend, though the increase is far more gradual.
 
-- **Biketheft**: In the earlier years (2015–2017), Bottom 10 Lowest neighborhoods have higher bike theft rates, but Top 10 Highest neighborhoods catch up around 2018–2020. From 2020 onwards, the bike theft rates in Top 10 Highest neighborhoods are actually higher than those in the Bottom 10 Lowest neighborhoods.
+- **Biketheft**: In the earlier years (2014–2017), Bottom 10 Lowest neighborhoods have higher bike theft rates, but Top 10 Highest neighborhoods catch up around 2018–2020. From 2020 onwards, the bike theft rates in Top 10 Highest neighborhoods are actually higher than those in the Bottom 10 Lowest neighborhoods.
 
 - **Break and Enter**: Rates for break and enter crimes fluctuate more in Bottom 10 Lowest neighborhoods, peaking around 2016–2017 and then decreasing slightly. Top 10 Highest neighborhoods show more stable but much lower break and enter rates overall.
 

@@ -9,22 +9,14 @@ This repo provides the code and final report of the empirical analysis of the TT
 
 The repo is structured as:
 
--   `data/raw_data` contains the raw data as obtained from the TTC's Transport Bus Initiative.
--   `data/simulated_data` contains the simulated data obtained from a Normal distribution.
--   `data/analysis_data` contains the cleaned dataset that was constructed.
--   `model` contains fitted models. 
--   `other` contains relevant literature, details about LLM chat interactions, and sketches.
+-   `data/raw_data` contains the raw data as obtained from the Crime Statistics and Home Price datasets.
+-   `data/simulated_data` contains the simulated data for home prices and crime statistics.
+-   `data/analysis_data` contains the cleaned datasets.
+-   `other` contains details about LLM chat interactions, and my preliminary sketches.
 -   `paper` contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper. 
--   `scripts` contains the R scripts used to simulate, download and clean data.
+-   `scripts` contains the R scripts used to simulate, download, clean, and test the data.
 
 
 ## Statement on LLM usage
 
-Aspects of the code were written with the help of ChatGPT. 
-
-## Some checks
-
-- [ ] Change the rproj file name so that it's not starter_folder.Rproj
-- [ ] Remove files that you're not using
-- [ ] Update comments in R scripts
-- [ ] Remove this checklist
+Portions of the code were developed with assistance from ChatGPT-4. It was used to provide comments on scripts, resolve display issues with plots in the final paper, and refine lengthy statements into more concise language.   
