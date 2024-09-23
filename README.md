@@ -12,7 +12,7 @@ The repo is structured as:
 -   `data/raw_data` contains the raw datasets for crime statistics and home prices as obtained from open data portal Toronto.
 -   `data/simulated_data` contains the simulated datasets for crime rates and home prices, used in the analysis.
 -   `data/analysis_data` contains the cleaned datasets that were used for the final analysis.
--   `other` contains details about interactions with large language models (LLMs) during development, as well as initial project sketches.
+-   `other` contains details about interactions with large language models (LLMs) during development, initial project sketches, and copies of the literature cited in the final paper.
 -   `paper` contains the files used to generate the research paper, including the Quarto document, bibliography, and the final PDF of the paper.
 -   `scripts` contains the R scripts used to simulate, download, clean, and test the data.
 
