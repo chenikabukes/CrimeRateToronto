@@ -19,4 +19,4 @@ The repo is structured as:
 
 ## Statement on LLM usage
 
-Portions of the code were developed with assistance from ChatGPT-4. It was used to provide comments on scripts, resolve display issues with plots in the final paper, and refine lengthy statements into more concise language.   
+Portions of this repo were developed with assistance from ChatGPT-4. It was used to provide comments on scripts, resolve display issues with plots in the final paper, and refine lengthy statements into more concise language.   
