@@ -36,7 +36,7 @@ This paper analyzes crime trends and their fluctuations over time across Toronto
 
 My findings reveal marked disparities, particularly in violent crimes such as shootings, assaults, and homicides, which are more prevalent in lower-priced neighborhoods. In contrast, non-violent crimes, such as theft, show significantly higher rates in higher-priced neighborhoods. Crimes like assault, homicide, theft over $5,000, and auto theft showed the most significant upward trends from 2014 to 2023. Crime rates either stagnated or dropped during 2020–2021, which can be attributed to the COVID-19 pandemic lockdowns. These insights are crucial for urban planning and policy development, as they highlight the need for targeted crime prevention strategies. By understanding how crime rates vary across neighborhoods with different economic conditions, and identifying which crimes have surged in recent years, city planners and policymakers can allocate resources more effectively and design interventions tailored to specific socioeconomic groups.
 
-The analysis in this paper was conducted using R [@citeR]. The paper is structured as follows: first, I review the selected data sources and their relevance to the subject. Second, I present key visualizations using the scales [@scales] and knitr [@knitr] packages to explore the relationships between neighborhood home prices, crime rates, and temporal trends from 2014 to 2023. Third, I provide an analysis of these visualizations and discuss their potential implications for public policy and future research into neighborhood-specific crime prevention strategies, based on the observed temporal trends in crime rates.
+The analysis in this paper was conducted using R [@citeR]. The paper is structured as follows: first, I review the selected data sources and their relevance to the subject in @sec-data. Second, I present key visualizations using the scales [@scales] and knitr [@knitr] packages to explore the relationships between neighborhood home prices, crime rates, and temporal trends from 2014 to 2023 in @sec-results. Third, I provide an analysis of these visualizations in @sec-discussion and discuss their potential implications for public policy and future research into neighborhood-specific crime prevention strategies, based on the observed temporal trends in crime rates.
 
 # Data {#sec-data}
 ##  Raw Data {#sub-section}
@@ -94,7 +94,7 @@ These variables allow for a detailed analysis of the relationship between socio-
 
 ## Summary Statistics and Visualisation 
 ### Summary Statistics of Housing Price Data 
-Table \@ref(tbl-housing-summary) an overview of the housing price data for the top 10 highest and bottom 10 lowest-priced neighborhoods.
+Table @(tbl-housing-summary) an overview of the housing price data for the top 10 highest and bottom 10 lowest-priced neighborhoods.
 
 ```{r}
 #| tbl-cap: "Summary Statistics of Housing Price Data (Top 10 Highest and Lowest)"
@@ -144,13 +144,17 @@ kable(housing_summary,
       align = c('l', 'c', 'c', 'c', 'c'))
 
 ```
+
+Table @(tbl-housing-summary) shows that the average home price in the top 10 high-priced neighborhoods is roughly five times higher than that of homes in the bottom 10 low-priced neighborhoods. Despite this large difference, the range of home prices in both neighborhood groups appears to have similar variability, with comparable standard deviations from their respective means.
+
 ### Mean Crime Rate Changes over Time
-Crime rate trends over the years (2014-2023) were analyzed for each crime type to understand patterns and shifts. This is visualized in Figure \@ref(fig-crime-comparison-0):
+The cleaned crime statistics dataset contains many more features than the home price dataset. For this reason, I present a visualization of the summary statistics in the form of a box plot for each individual crime in the dataset in the first year the data was collected (2014) vs the final year of data the dataset provides (2023). This is visualized in @(fig-crime-comparison-2014-2023):
 
 ```{r}
 #| fig-cap: "Total Crime Rates from 2014-2023"
 #| fig-pos: "H"
 #| fig-label: fig-crime-comparison-0
+#| out.width: "49%"
 #| show_col_types: FALSE
 #| echo: false
 #| message: false
@@ -172,9 +176,43 @@ ggplot(mean_crime_rates, aes(x = factor(year), y = mean_crime_rate)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  
   scale_y_continuous(labels = comma)  
+```
+
+```{r}
+#| fig-cap: "Crime Rate Distribution for 2014 and 2023 for Each Crime Type"
+#| fig-pos: "H"
+#| out.width: "49%"
+#| fig-label: fig-crime-comparison-2014-2023
+#| show_col_types: FALSE
+#| echo: false
+#| message: false
+
+# Load necessary packages
+library(tidyverse)
+
+# Read in the crime data
+crime_cleaned_data <- read_csv("../data/clean_data/crime_cleaned_data.csv")
+
+# Filter the data to include only 2014 and 2023
+crime_filtered <- crime_cleaned_data %>%
+  filter(year %in% c(2014, 2023))
+
+# Create box plots for each crime type for 2014 and 2023
+ggplot(crime_filtered, aes(x = factor(year), y = rate, fill = crime)) +
+  geom_boxplot() +
+  facet_wrap(~ crime, scales = "free_y") +  
+  labs(title = "Crime Rate Distribution for 2014 and 2023 for Each Crime Type",
+       x = "Year",
+       y = "Crime Rate per 100,000 Residents") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  
+  scale_y_continuous(labels = scales::comma)
+
 
 ```
-Figure \@ref(fig-crime-comparison-0) showcases a rather steady trend in crime rates with a dip in 2020 and 2021 which could be attributed to Covid-19 lockdowns, followed by a spike in 2023 of approximately 25% increase in mean crime rates across the city of Toronto's neighbourhoods. 
+Figure @(fig-crime-comparison-0) highlights a relatively steady trend in crime rates, with a noticeable dip in 2020 and 2021, likely influenced by the COVID-19 lockdowns. This is followed by a sharp spike in 2023, marking an approximate 25% increase in the mean crime rates across Toronto’s neighborhoods.
+
+Figure @(fig-crime-comparison-2014-2023) provides detailed statistics on the rates of nine different crime types. Each crime category presents a significant number of outliers, which could potentially correspond to either the top 10 or bottom 10 neighborhoods—a hypothesis that will be further investigated. While some crime rates have significantly risen since 2014, others have remained stagnant or even declined. These trends will be thoroughly explored in the results section.
 
 ### Mean Individual Crime Rate Changes over Time 
 ```{r}
@@ -207,7 +245,7 @@ ggplot(crime_summary, aes(x = factor(year), y = Mean_Rate, fill = crime)) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1, size = 8)) +  
   theme(panel.spacing = unit(2, "lines"))  
 ```
-Figure \@ref(fig-crime-comparison-1) displays the mean crime rate for each crime type individually. There is a clear pattern of crime rates being at their lowest levels during 2020-2021 for all crime types, which can be argued to be due to Covid-19 lockdowns.
+Figure @(fig-crime-comparison-1) displays the mean crime rate for each crime type individually. There is a clear pattern of crime rates being at their lowest levels during 2020-2021 for all crime types, which can be argued to be due to Covid-19 lockdowns.
 
 **Up-trending Individual Crime Rates**
 
@@ -284,7 +322,7 @@ ggplot(crime_high_low, aes(x = neighbourhood_type, y = rate, fill = neighbourhoo
 
 ```
 
-Figure \@ref(fig-crime-comparison) shows a comparative analysis of crime rates between the top 10 highest and bottom 10 lowest home price neighborhoods in Toronto from 2014 to 2023. 
+Figure @(fig-crime-comparison) shows a comparative analysis of crime rates between the top 10 highest and bottom 10 lowest home price neighborhoods in Toronto from 2014 to 2023. 
 
 **Crimes more Prevalant in High-Price Neighbourhoods**
 
@@ -357,7 +395,7 @@ ggplot(crime_yearly_summary, aes(x = year, y = avg_overall_crime_rate, fill = ne
   )
 
 ```
-Figure \@ref(fig-crime-time-series) shows that the overall crime rate has increased at a much faster rate in the top 10 highest-priced neighborhoods compared to the bottom 10 lowest-priced neighborhoods. The low-priced neighborhoods maintained relatively consistent crime rates around 1,500 per 100,000 residents until 2022, when the rate began to rise, reaching closer to 2,000. Both high-priced and low-priced neighborhoods experienced dips in crime rates over the years but show an overall increasing trend from 2014 to 2023. The top 10 neighborhoods have seen the most significant surge, with crime rates rising from a low of about 1,100 in 2016 to a high of about 1,950 in 2023, making the top 10 neighborhoods the ones with the highest crime rate in 2023.
+Figure @(fig-crime-time-series) shows that the overall crime rate has increased at a much faster rate in the top 10 highest-priced neighborhoods compared to the bottom 10 lowest-priced neighborhoods. The low-priced neighborhoods maintained relatively consistent crime rates around 1,500 per 100,000 residents until 2022, when the rate began to rise, reaching closer to 2,000. Both high-priced and low-priced neighborhoods experienced dips in crime rates over the years but show an overall increasing trend from 2014 to 2023. The top 10 neighborhoods have seen the most significant surge, with crime rates rising from a low of about 1,100 in 2016 to a high of about 1,950 in 2023, making the top 10 neighborhoods the ones with the highest crime rate in 2023.
 
 ## Average Crime Rate Comparison Between High and Low-Priced Neighborhoods from 2014 to 2023 for Individual Crimes {#results-3}
 ```{r}
@@ -403,7 +441,7 @@ ggplot(crime_high_low_summary, aes(x = year, y = avg_crime_rate, fill = neighbou
   )
 
 ```
-Figure \@ref(fig-crime-time-series-individuals) displays the average crime rates in the top 10 and bottom 10 priced neighborhoods for each individual crime from 2014 to 2023.
+Figure @(fig-crime-time-series-individuals) displays the average crime rates in the top 10 and bottom 10 priced neighborhoods for each individual crime from 2014 to 2023.
 
 **Upwards Trending Individual Crimes**
 
@@ -430,7 +468,7 @@ Figure \@ref(fig-crime-time-series-individuals) displays the average crime rates
 
 Overall, the crimes most on the rise in the top 10 neighborhoods are auto theft, theft over $5,000, and break and enter. In the bottom 10 neighborhoods, homicide, auto theft, and assault are increasing the most. The crimes that have shown significant decreases in both groups are shootings and robbery. Theft from motor vehicles remains relatively stagnant, ranging from 200 to 300 incidents per 100,000 each year over the time period.
 
-# Discussion
+# Discussion {#sec-discussion}
 
 This analysis confirms the hypothesis that wealthier neighborhoods experience lower rates of violent crimes, while economically disadvantaged areas face higher exposure to violent crime. However, non-violent crimes are more prevalent in wealthier neighborhoods, suggesting different socio-economic dynamics at play.
 
